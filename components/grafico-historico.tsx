@@ -63,7 +63,7 @@ export function GraficoHistorico({ materia, datos }: GraficoHistoricoProps) {
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <h2 className="mb-6 text-lg font-semibold tracking-tight text-card-foreground">Gráfico de línea</h2>
+        <h2 className="mb-6 text-lg font-semibold tracking-tight text-card-foreground">Comportamiento histórico</h2>
           {datos.length > 0 ? (
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
