@@ -32,26 +32,23 @@ function formatoCorto(valor: number) {
 function colorNivel(porcentaje: number) {
   if (porcentaje < 30) {
     return {
-      barra: "bg-rose-500",
-      halo: "shadow-[0_0_18px_rgba(244,63,94,0.45)]",
-      chip: "bg-rose-500/10 text-rose-700 border-rose-300/50 dark:text-rose-300",
+      barra: "bg-destructive",
+      chip: "bg-destructive/10 text-destructive-foreground border-destructive/30",
       estado: "Critico",
     }
   }
 
   if (porcentaje <= 60) {
     return {
-      barra: "bg-amber-500",
-      halo: "shadow-[0_0_18px_rgba(245,158,11,0.45)]",
-      chip: "bg-amber-500/10 text-amber-700 border-amber-300/50 dark:text-amber-300",
+      barra: "bg-warning",
+      chip: "bg-warning/10 text-warning-foreground border-warning/30",
       estado: "Atencion",
     }
   }
 
   return {
-    barra: "bg-emerald-500",
-    halo: "shadow-[0_0_18px_rgba(16,185,129,0.45)]",
-    chip: "bg-emerald-500/10 text-emerald-700 border-emerald-300/50 dark:text-emerald-300",
+    barra: "bg-success",
+    chip: "bg-success/10 text-success-foreground border-success/30",
     estado: "Optimo",
   }
 }
@@ -103,7 +100,7 @@ export function TarjetaMateria({ materia }: { materia: Materia }) {
         <div className="relative h-44 w-20 overflow-hidden rounded-t-[1.6rem] rounded-b-lg border-2 border-border bg-muted/80 p-1">
           <div className="absolute inset-x-1 bottom-1 top-1 overflow-hidden rounded-t-[1.2rem] rounded-b-md bg-gradient-to-b from-muted to-background">
             <div
-              className={`absolute inset-x-0 bottom-0 transition-all duration-500 ${semaforo.barra} ${semaforo.halo}`}
+              className={`absolute inset-x-0 bottom-0 transition-all duration-500 ${semaforo.barra}`}
               style={{ height: `${porcentajeActual}%` }}
             />
           </div>
@@ -154,7 +151,7 @@ export function TarjetaMateria({ materia }: { materia: Materia }) {
         </Button>
 
         {!tanqueDisponible && (
-          <p className="text-sm text-amber-700">
+          <p className="text-sm text-warning-foreground">
             Tanque pendiente de vincular en base de datos.
           </p>
         )}
@@ -164,8 +161,8 @@ export function TarjetaMateria({ materia }: { materia: Materia }) {
             role="status"
             className={
               mensaje.tipo === "ok"
-                ? "text-sm text-emerald-700"
-                : "text-sm text-rose-700"
+                ? "text-sm text-success-foreground"
+                : "text-sm text-destructive-foreground"
             }
           >
             {mensaje.texto}

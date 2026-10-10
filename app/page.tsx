@@ -12,23 +12,23 @@ function estadoNivel(porcentaje: number) {
   if (porcentaje < 30) {
     return {
       texto: "Critico",
-      colorBarra: "bg-rose-500",
-      colorChip: "bg-rose-500/10 text-rose-700 border-rose-300/50 dark:text-rose-300",
+      colorBarra: "bg-destructive",
+      colorChip: "bg-destructive/10 text-destructive-foreground border-destructive/30",
     }
   }
 
   if (porcentaje <= 60) {
     return {
       texto: "Atencion",
-      colorBarra: "bg-amber-500",
-      colorChip: "bg-amber-500/10 text-amber-700 border-amber-300/50 dark:text-amber-300",
+      colorBarra: "bg-warning",
+      colorChip: "bg-warning/10 text-warning-foreground border-warning/30",
     }
   }
 
   return {
     texto: "Optimo",
-    colorBarra: "bg-emerald-500",
-    colorChip: "bg-emerald-500/10 text-emerald-700 border-emerald-300/50 dark:text-emerald-300",
+    colorBarra: "bg-success",
+    colorChip: "bg-success/10 text-success-foreground border-success/30",
   }
 }
 

@@ -47,17 +47,17 @@ export function GraficoHistorico({ materia, datos }: GraficoHistoricoProps) {
 
           <div className="rounded-lg bg-background/60 p-4">
             <p className="text-sm font-medium text-muted-foreground">Máximo</p>
-            <p className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{maximo}%</p>
+            <p className="mt-2 text-2xl font-bold text-success-foreground">{maximo}%</p>
           </div>
 
           <div className="rounded-lg bg-background/60 p-4">
             <p className="text-sm font-medium text-muted-foreground">Mínimo</p>
-            <p className="mt-2 text-2xl font-bold text-rose-600 dark:text-rose-400">{minimo}%</p>
+            <p className="mt-2 text-2xl font-bold text-destructive-foreground">{minimo}%</p>
           </div>
 
           <div className="rounded-lg bg-background/60 p-4">
             <p className="text-sm font-medium text-muted-foreground">Críticos</p>
-            <p className="mt-2 text-2xl font-bold text-rose-600 dark:text-rose-400">{criticos}x</p>
+            <p className="mt-2 text-2xl font-bold text-destructive-foreground">{criticos}x</p>
           </div>
         </div>
       </section>
@@ -69,11 +69,18 @@ export function GraficoHistorico({ materia, datos }: GraficoHistoricoProps) {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={[...datos].reverse()} margin={{ top: 5, right: 10, bottom: 0, left: -20 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="fecha" tick={{ fontSize: 11 }} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} width={40} />
-                  <Tooltip formatter={(value: number) => [`${value}%`, "Nivel"]} />
-                  <ReferenceLine y={30} stroke="#ef4444" strokeDasharray="4 4" />
-                  <Line type="monotone" dataKey="porcentaje" stroke="#2563eb" strokeWidth={2} dot={{ r: 3 }} />
+                  <XAxis dataKey="fecha" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} width={40} />
+                  <Tooltip
+                    formatter={(value: number) => [`${value}%`, "Nivel"]}
+                    contentStyle={{
+                      backgroundColor: "var(--popover)",
+                      borderColor: "var(--border)",
+                      color: "var(--popover-foreground)",
+                    }}
+                  />
+                  <ReferenceLine y={30} stroke="var(--destructive)" strokeDasharray="4 4" />
+                  <Line type="monotone" dataKey="porcentaje" stroke="var(--primary)" strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

@@ -212,7 +212,7 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
         )}
 
         {!tanqueSeleccionado && !graficoSeleccionado && !error && materias.every((m) => !m.id) && (
-          <p className="rounded-lg border border-amber-300/50 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+          <p className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning-foreground">
             Ningún tanque coincide con los nombres esperados. Crea los registros en la tabla materias_primas para habilitar el guardado.
           </p>
         )}
