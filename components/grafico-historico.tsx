@@ -88,10 +88,16 @@ export function GraficoHistorico({ materia, datos, dias, onCambiarDias }: Grafic
           {datos.length > 0 ? (
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={[...datos].reverse()} margin={{ top: 5, right: 10, bottom: 0, left: -20 }}>
+                <LineChart data={[...datos].reverse()} margin={{ top: 12, right: 10, bottom: 0, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="fecha" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} width={40} />
+                  <YAxis
+                    domain={[0, 100]}
+                    ticks={[0, 20, 40, 60, 80, 100]}
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                    tickMargin={8}
+                    width={48}
+                  />
                   <Tooltip
                     formatter={(value: number) => [`${value}%`, "Nivel"]}
                     contentStyle={{
