@@ -12,9 +12,11 @@ type DatoHistorico = {
 type GraficoHistoricoProps = {
   materia: Materia
   datos: DatoHistorico[]
+  dias: 15 | 30
+  onCambiarDias: (dias: 15 | 30) => void
 }
 
-export function GraficoHistorico({ materia, datos }: GraficoHistoricoProps) {
+export function GraficoHistorico({ materia, datos, dias, onCambiarDias }: GraficoHistoricoProps) {
   const nombreTanque = materia.tanque ?? materia.nombre
 
   // Calcular estadísticas
@@ -29,7 +31,7 @@ export function GraficoHistorico({ materia, datos }: GraficoHistoricoProps) {
       <header className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <p className="text-xs font-semibold tracking-[0.24em] text-primary uppercase">Historial</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-card-foreground text-balance">
-          {nombreTanque} - Últimos 14 días
+          {nombreTanque} - Últimos {dias} días
         </h1>
         <p className="mt-2 max-w-3xl text-muted-foreground text-pretty">
           Comportamiento histórico y estadísticas del nivel
@@ -63,7 +65,26 @@ export function GraficoHistorico({ materia, datos }: GraficoHistoricoProps) {
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <h2 className="mb-6 text-lg font-semibold tracking-tight text-card-foreground">Comportamiento histórico</h2>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold tracking-tight text-card-foreground">Comportamiento histórico</h2>
+          <div className="flex gap-2" aria-label="Periodo del historial">
+            {([15, 30] as const).map((opcion) => (
+              <button
+                key={opcion}
+                type="button"
+                aria-pressed={dias === opcion}
+                onClick={() => onCambiarDias(opcion)}
+                className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  dias === opcion
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-background text-foreground hover:bg-muted"
+                }`}
+              >
+                {opcion} días
+              </button>
+            ))}
+          </div>
+        </div>
           {datos.length > 0 ? (
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">

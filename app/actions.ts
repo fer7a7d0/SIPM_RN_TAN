@@ -79,7 +79,7 @@ export async function actualizarNivel(formData: FormData): Promise<ActionResult>
   return { ok: true }
 }
 
-export async function obtenerHistorialTanque(materiaId: string) {
+export async function obtenerHistorialTanque(materiaId: string, dias: 15 | 30 = 15) {
   const supabase = await createClient()
   
   if (!materiaId) {
@@ -87,17 +87,16 @@ export async function obtenerHistorialTanque(materiaId: string) {
     return []
   }
 
-  console.log("obtenerHistorialTanque: buscando para materiaId =", materiaId)
-  
-  // Obtener movimientos de los últimos 14 días
-  const hace14Dias = new Date()
-  hace14Dias.setDate(hace14Dias.getDate() - 14)
+  console.log(`obtenerHistorialTanque: buscando ${dias} días para materiaId =`, materiaId)
+
+  const fechaInicio = new Date()
+  fechaInicio.setDate(fechaInicio.getDate() - dias)
 
   const { data, error } = await supabase
     .from("movimientos")
     .select("cantidad_nueva, nota, creado_en")
     .eq("materia_prima_id", materiaId)
-    .gte("creado_en", hace14Dias.toISOString())
+    .gte("creado_en", fechaInicio.toISOString())
     .order("creado_en", { ascending: false })
 
   if (error) {

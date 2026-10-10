@@ -41,6 +41,7 @@ type DashboardSelectorProps = {
 export function DashboardSelector({ resumenTanques, materias, error }: DashboardSelectorProps) {
   const [tanqueSeleccionado, setTanqueSeleccionado] = useState<string | null>(null)
   const [graficoSeleccionado, setGraficoSeleccionado] = useState<string | null>(null)
+  const [diasHistorial, setDiasHistorial] = useState<15 | 30>(15)
   const [historialDatos, setHistorialDatos] = useState<Array<{ fecha: string; porcentaje: number; nota?: string }>>([])
   const [isPending, startTransition] = useTransition()
   const [isSharing, setIsSharing] = useState(false)
@@ -75,19 +76,20 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
   const materiaSeleccionada = tanqueSeleccionado ? materiaPorNombre.get(tanqueSeleccionado) : null
   const materiaGrafico = graficoSeleccionado ? materiaPorNombre.get(graficoSeleccionado) : null
 
-  // Obtener historial cuando se selecciona un gráfico
   useEffect(() => {
     if (graficoSeleccionado && materiaGrafico?.id) {
-      console.log("DashboardSelector: cargando historial para", graficoSeleccionado, "id:", materiaGrafico.id)
+      let activo = true
+
       startTransition(async () => {
-        const datos = await obtenerHistorialTanque(materiaGrafico.id)
-        console.log("DashboardSelector: datos obtenidos:", datos)
-        setHistorialDatos(datos)
+        const datos = await obtenerHistorialTanque(materiaGrafico.id, diasHistorial)
+        if (activo) setHistorialDatos(datos)
       })
-    } else {
-      console.log("DashboardSelector: no se puede cargar historial - graficoSeleccionado:", graficoSeleccionado, "id:", materiaGrafico?.id)
+
+      return () => {
+        activo = false
+      }
     }
-  }, [graficoSeleccionado, materiaGrafico])
+  }, [graficoSeleccionado, materiaGrafico, diasHistorial])
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
@@ -188,7 +190,12 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
                 <p className="text-sm">Cargando historial...</p>
               </div>
             ) : (
-              <GraficoHistorico materia={materiaGrafico} datos={historialDatos} />
+              <GraficoHistorico
+                materia={materiaGrafico}
+                datos={historialDatos}
+                dias={diasHistorial}
+                onCambiarDias={setDiasHistorial}
+              />
             )}
           </section>
         )}
