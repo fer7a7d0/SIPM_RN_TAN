@@ -106,9 +106,14 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
           {!tanqueSeleccionado && !graficoSeleccionado && (
             <section className="mt-5 rounded-xl border border-border bg-background/60 p-3 sm:p-4">
               <div className="mb-3 flex items-center justify-between gap-2">
-                <h2 className="text-sm font-semibold tracking-wide text-foreground uppercase">
-                  Resumen general de niveles
-                </h2>
+                <div>
+                  <h2 className="text-sm font-semibold tracking-wide text-foreground uppercase">
+                    Resumen general de niveles
+                  </h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Ordenado de menor a mayor
+                  </p>
+                </div>
                 <button
                   onClick={compartirWhatsApp}
                   disabled={isSharing}
