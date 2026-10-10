@@ -93,12 +93,12 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
     <div className="min-h-screen bg-background font-sans text-foreground">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-3 py-10 sm:px-6 md:py-12">
         <header ref={headerRef} className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6">
-          <p className="text-xs font-semibold tracking-[0.24em] text-primary uppercase">Panel de planta</p>
+          <p className="text-xs font-semibold tracking-[0.24em] text-primary uppercase">MONITOREO DE TANQUES TERMO</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-card-foreground text-balance">
-            Dashboard de tanques termo
+            Resumen de tanques termo
           </h1>
           <p className="mt-2 max-w-3xl text-muted-foreground text-pretty">
-            Visualiza el nivel actual
+            Nivel actual
           </p>
 
           {!tanqueSeleccionado && !graficoSeleccionado && (
@@ -110,14 +110,13 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
                 <button
                   onClick={compartirWhatsApp}
                   disabled={isSharing}
+                  aria-label={isSharing ? "Generando resumen para compartir" : "Compartir resumen"}
+                  title={isSharing ? "Generando..." : "Compartir"}
                   className="flex items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground transition-all hover:bg-muted/80 disabled:opacity-60"
                 >
                   <Share2 className="h-3.5 w-3.5" />
-                  {isSharing ? "Generando..." : "Compartir"}
                 </button>
               </div>
-              <p className="mb-3 text-xs text-muted-foreground">Ordenado de menor a mayor</p>
-
               <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {resumenTanques.map((tanque) => (
                   <li key={tanque.nombre} className="rounded-lg border border-border bg-card">
