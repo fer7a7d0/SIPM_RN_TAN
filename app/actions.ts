@@ -27,8 +27,8 @@ export async function actualizarNivel(formData: FormData): Promise<ActionResult>
       error: `El nivel debe ser un valor entre 0 y ${tanqueConfig.capacidadMaxima} para ${tanqueConfig.nombreUI}.`,
     }
   }
-  if (!unidad) {
-    return { ok: false, error: "Debes indicar una unidad de medida." }
+  if (unidad !== tanqueConfig.unidadContenido) {
+    return { ok: false, error: `La unidad de ${tanqueConfig.nombreUI} debe ser ${tanqueConfig.unidadContenido}.` }
   }
 
   const porcentajeNuevo = Math.round((nivelMedido / tanqueConfig.capacidadMaxima) * 100)
@@ -59,7 +59,7 @@ export async function actualizarNivel(formData: FormData): Promise<ActionResult>
     return { ok: false, error: "No se pudo actualizar el nivel." }
   }
 
-  const detalleNivel = `Lectura real: ${nivelMedido}/${tanqueConfig.capacidadMaxima}`
+  const detalleNivel = `Contenido registrado: ${nivelMedido}/${tanqueConfig.capacidadMaxima} ${tanqueConfig.unidadContenido}`
   const notaCompleta = nota ? `${nota} | ${detalleNivel}` : detalleNivel
 
   // Registrar el movimiento en el historial

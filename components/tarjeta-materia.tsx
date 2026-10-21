@@ -13,6 +13,7 @@ export type Materia = {
   tanque?: string
   claveTanque?: string
   capacidadMaxima?: number
+  unidadContenido?: "m³" | "kg"
 }
 
 function clampPorcentaje(valor: number) {
@@ -25,8 +26,11 @@ function clampNivel(valor: number, capacidadMaxima: number) {
   return Math.max(0, Math.min(capacidadMaxima, valor))
 }
 
-function formatoCorto(valor: number) {
-  return Math.round(valor).toString()
+function formatoContenido(valor: number) {
+  return new Intl.NumberFormat("es-MX", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(valor)
 }
 
 function colorNivel(porcentaje: number) {
@@ -55,8 +59,9 @@ function colorNivel(porcentaje: number) {
 
 export function TarjetaMateria({ materia }: { materia: Materia }) {
   const capacidadMaxima = materia.capacidadMaxima ?? 100
+  const unidadContenido = materia.unidadContenido ?? "m³"
   const nivelInicial = clampNivel((clampPorcentaje(materia.cantidad) * capacidadMaxima) / 100, capacidadMaxima)
-  const [cantidad, setCantidad] = useState(formatoCorto(nivelInicial))
+  const [cantidad, setCantidad] = useState(formatoContenido(nivelInicial))
   const [nota, setNota] = useState("")
   const [mensaje, setMensaje] = useState<{ tipo: "ok" | "error"; texto: string } | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -93,8 +98,11 @@ export function TarjetaMateria({ materia }: { materia: Materia }) {
       <div className="grid grid-cols-[1fr_auto] items-center gap-4">
         <div>
           <p className="text-sm font-medium text-muted-foreground">Nivel actual</p>
-          <p className="mt-1 text-3xl font-bold tabular-nums text-card-foreground">{formatoCorto(porcentajeActual)}%</p>
-          <p className="text-xs text-muted-foreground">Capacidad maxima: {capacidadMaxima}</p>
+          <p className="mt-1 text-3xl font-bold tabular-nums text-card-foreground">{formatoContenido(porcentajeActual)}%</p>
+          <p className="mt-1 text-sm font-semibold tabular-nums text-primary">
+            Contenido: {formatoContenido(nivelCapturado)} {unidadContenido}
+          </p>
+          <p className="text-xs text-muted-foreground">Capacidad máxima: {formatoContenido(capacidadMaxima)} {unidadContenido}</p>
         </div>
 
         <div className="relative h-44 w-20 overflow-hidden rounded-t-[1.6rem] rounded-b-lg border-2 border-border bg-muted/80 p-1">
@@ -112,10 +120,10 @@ export function TarjetaMateria({ materia }: { materia: Materia }) {
         <input type="hidden" name="id" value={materia.id} />
         <input type="hidden" name="nombre" value={nombreTanque} />
         <input type="hidden" name="tanqueClave" value={materia.claveTanque ?? ""} />
-        <input type="hidden" name="unidad" value="%" />
+        <input type="hidden" name="unidad" value={unidadContenido} />
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-muted-foreground">Registrar nivel medido (0 - {capacidadMaxima})</span>
+          <span className="font-medium text-muted-foreground">Registrar contenido medido (0 - {formatoContenido(capacidadMaxima)} {unidadContenido})</span>
             <input
               name="cantidad"
               type="number"
@@ -131,7 +139,7 @@ export function TarjetaMateria({ materia }: { materia: Materia }) {
             />
         </label>
 
-        <p className="text-xs text-muted-foreground">Porcentaje calculado: {formatoCorto(porcentajeActual)}%</p>
+        <p className="text-xs text-muted-foreground">Porcentaje calculado: {formatoContenido(porcentajeActual)}%</p>
 
         <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium text-muted-foreground">Nota (opcional)</span>

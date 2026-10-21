@@ -54,6 +54,7 @@ export default async function Home() {
         tanque: tanque.nombreUI,
         claveTanque: tanque.clave,
         capacidadMaxima: tanque.capacidadMaxima,
+        unidadContenido: tanque.unidadContenido,
       }
     }
 
@@ -66,6 +67,7 @@ export default async function Home() {
       tanque: tanque.nombreUI,
       claveTanque: tanque.clave,
       capacidadMaxima: tanque.capacidadMaxima,
+      unidadContenido: tanque.unidadContenido,
     }
   })
 
@@ -84,7 +86,7 @@ export default async function Home() {
     <DashboardSelector
       resumenTanques={resumenTanques}
       materias={materias}
-      error={error}
+      error={Boolean(error)}
     />
   )
 }

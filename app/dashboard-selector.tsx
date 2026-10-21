@@ -35,7 +35,7 @@ function generarTextoResumen(resumenTanques: ResumenTanque[]) {
 type DashboardSelectorProps = {
   resumenTanques: ResumenTanque[]
   materias: Materia[]
-  error: boolean | null
+  error: boolean
 }
 
 export function DashboardSelector({ resumenTanques, materias, error }: DashboardSelectorProps) {
