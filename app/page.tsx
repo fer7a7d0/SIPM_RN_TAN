@@ -36,7 +36,7 @@ export default async function Home() {
   const supabase = await createClient()
 
   const { data, error } = await supabase
-    .from("materias_primas")
+    .from("TAN_tanques_termo")
     .select("id, nombre, cantidad, unidad, actualizado_en")
     .order("nombre", { ascending: true })
 
