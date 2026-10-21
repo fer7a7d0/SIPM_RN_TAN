@@ -38,7 +38,7 @@ export async function actualizarNivel(formData: FormData): Promise<ActionResult>
   let cantidadAnterior = 0
 
   const { data: actual, error: readError } = await supabase
-    .from("materias_primas")
+    .from("TAN_tanques_termo")
     .select("id, cantidad")
     .eq("id", materiaId)
     .single()
@@ -51,7 +51,7 @@ export async function actualizarNivel(formData: FormData): Promise<ActionResult>
 
   // Actualizar el nivel actual
   const { error: updateError } = await supabase
-    .from("materias_primas")
+    .from("TAN_tanques_termo")
     .update({ cantidad: porcentajeNuevo, unidad, actualizado_en: new Date().toISOString() })
     .eq("id", materiaId)
 
@@ -63,7 +63,7 @@ export async function actualizarNivel(formData: FormData): Promise<ActionResult>
   const notaCompleta = nota ? `${nota} | ${detalleNivel}` : detalleNivel
 
   // Registrar el movimiento en el historial
-  const { error: histError } = await supabase.from("movimientos").insert({
+  const { error: histError } = await supabase.from("TAN_mediciones").insert({
     materia_prima_id: materiaId,
     cantidad_anterior: cantidadAnterior,
     cantidad_nueva: porcentajeNuevo,
@@ -93,7 +93,7 @@ export async function obtenerHistorialTanque(materiaId: string, dias: 15 | 30 = 
   fechaInicio.setDate(fechaInicio.getDate() - dias)
 
   const { data, error } = await supabase
-    .from("movimientos")
+    .from("TAN_mediciones")
     .select("cantidad_nueva, nota, creado_en")
     .eq("materia_prima_id", materiaId)
     .gte("creado_en", fechaInicio.toISOString())
