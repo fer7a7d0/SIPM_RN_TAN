@@ -139,6 +139,7 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
     unidad: materia.unidad,
     actualizado_en: materia.actualizado_en,
     capacidad_maxima: materia.capacidadMaxima,
+    capacidad_m3: materia.capacidadM3,
     tiene_medicion: materia.tieneMedicion,
   }))
 
@@ -147,6 +148,7 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
       ...tanque,
       tanque: tanque.nombre,
       capacidadMaxima: tanque.capacidad_maxima,
+      capacidadM3: tanque.capacidad_m3,
       tieneMedicion: tanque.tiene_medicion,
     }
     setMateriasActuales((actuales) => [...actuales, materia].sort((a, b) => a.nombre.localeCompare(b.nombre)))
@@ -161,6 +163,7 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
       ...tanque,
       tanque: tanque.nombre,
       capacidadMaxima: tanque.capacidad_maxima,
+      capacidadM3: tanque.capacidad_m3,
       tieneMedicion: tanque.tiene_medicion,
     }
     setMateriasActuales((actuales) =>

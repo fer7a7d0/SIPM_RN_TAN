@@ -44,7 +44,7 @@ export default async function Home() {
 
   const { data, error } = await supabase
     .from("TAN_tanques_termo")
-    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima, tiene_medicion")
+    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima, capacidad_m3, tiene_medicion")
     .order("nombre", { ascending: true })
 
   const materias: Materia[] = (data ?? []).map((tanque) => ({
@@ -55,6 +55,7 @@ export default async function Home() {
     unidad: tanque.unidad,
     actualizado_en: tanque.actualizado_en,
     capacidadMaxima: Number(tanque.capacidad_maxima),
+    capacidadM3: tanque.capacidad_m3 === null ? null : Number(tanque.capacidad_m3),
     tieneMedicion: tanque.tiene_medicion,
   }))
 

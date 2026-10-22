@@ -12,6 +12,7 @@ export type Materia = {
   actualizado_en: string
   tanque?: string
   capacidadMaxima: number
+  capacidadM3: number | null
   tieneMedicion: boolean
 }
 

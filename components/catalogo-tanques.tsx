@@ -179,6 +179,18 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
                     className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
                   />
                 </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="font-medium">Capacidad en m3</span>
+                  <input
+                    name="capacidad_m3"
+                    type="number"
+                    min="0.01"
+                    step="any"
+                    defaultValue={tanqueEditando?.capacidad_m3 ?? ""}
+                    required
+                    className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </label>
                 {tanqueEditando && (
                   <label className="flex flex-col gap-1 text-sm">
                     <span className="font-medium">Unidad de lectura</span>
@@ -230,6 +242,9 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
                       <p className="text-xs text-muted-foreground">
                         Capacidad: {tanque.capacidad_maxima} {tanque.unidad} · Nivel actual:{" "}
                         {tanque.tiene_medicion ? `${tanque.cantidad}%` : "Sin registro"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Capacidad en m3: {tanque.capacidad_m3 ?? "Sin especificar"}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
