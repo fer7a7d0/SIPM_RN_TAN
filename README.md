@@ -26,7 +26,7 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 ## Supabase
 
-Apply `supabase/migrations/20261022120000_allow_public_history_deletes.sql` to the Supabase project before using the history delete action. It grants the unauthenticated `anon` role permission to delete rows from `TAN_mediciones`; anyone who can reach the app can therefore delete history records.
+Apply the migrations in `supabase/migrations` to the Supabase project before using the history delete action. The unauthenticated `anon` role can delete rows from `TAN_mediciones`; anyone who can reach the app can therefore delete history records. Deleting a tank's latest measurement also restores its current level from the previous measurement.
 
 ## Learn More
 

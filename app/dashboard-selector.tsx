@@ -32,6 +32,30 @@ function generarTextoResumen(resumenTanques: ResumenTanque[]) {
   return [`\u{1F4CA} Resumen de niveles - ${fecha}`, "", ...lineas].join("\n")
 }
 
+function obtenerEstadoNivel(porcentaje: number): ResumenTanque["estado"] {
+  if (porcentaje < 30) {
+    return {
+      texto: "Critico",
+      colorBarra: "bg-destructive",
+      colorChip: "bg-destructive/10 text-destructive-foreground border-destructive/30",
+    }
+  }
+
+  if (porcentaje <= 60) {
+    return {
+      texto: "Atencion",
+      colorBarra: "bg-warning",
+      colorChip: "bg-warning/10 text-warning-foreground border-warning/30",
+    }
+  }
+
+  return {
+    texto: "Optimo",
+    colorBarra: "bg-success",
+    colorChip: "bg-success/10 text-success-foreground border-success/30",
+  }
+}
+
 type DashboardSelectorProps = {
   resumenTanques: ResumenTanque[]
   materias: Materia[]
@@ -39,6 +63,7 @@ type DashboardSelectorProps = {
 }
 
 export function DashboardSelector({ resumenTanques, materias, error }: DashboardSelectorProps) {
+  const [resumenActual, setResumenActual] = useState(resumenTanques)
   const [tanqueSeleccionado, setTanqueSeleccionado] = useState<string | null>(null)
   const [graficoSeleccionado, setGraficoSeleccionado] = useState<string | null>(null)
   const [diasHistorial, setDiasHistorial] = useState<15 | 30>(15)
@@ -61,12 +86,12 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
       if (navigator.canShare?.({ files: [archivo] })) {
         await navigator.share({ files: [archivo], title: "Resumen de niveles" })
       } else {
-        const texto = generarTextoResumen(resumenTanques)
+        const texto = generarTextoResumen(resumenActual)
         window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank")
       }
     } catch (err) {
       if ((err as DOMException)?.name !== "AbortError") {
-        const texto = generarTextoResumen(resumenTanques)
+        const texto = generarTextoResumen(resumenActual)
         window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank")
       }
     } finally {
@@ -107,6 +132,18 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
       }
 
       setHistorialDatos((datos) => datos.filter((dato) => dato.id !== medicionId))
+
+      if (resultado.latestDeleted && resultado.restoredCantidad !== undefined) {
+        const porcentaje = Math.round(Math.max(0, Math.min(100, resultado.restoredCantidad)))
+        const nombreTanque = materiaGrafico.tanque ?? materiaGrafico.nombre
+        setResumenActual((resumen) =>
+          resumen.map((tanque) =>
+            tanque.nombre === nombreTanque
+              ? { ...tanque, porcentaje, estado: obtenerEstadoNivel(porcentaje) }
+              : tanque,
+          ).sort((a, b) => a.porcentaje - b.porcentaje),
+        )
+      }
     } catch (error) {
       console.error("Error eliminando registro del historial:", error)
       setErrorEliminar("Ocurrió un error al eliminar el registro. Intenta de nuevo.")
@@ -149,7 +186,7 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
                 </button>
               </div>
               <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                {resumenTanques.map((tanque) => (
+                {resumenActual.map((tanque) => (
                   <li key={tanque.nombre} className="rounded-lg border border-border bg-card">
                     <button
                       onClick={() => setTanqueSeleccionado(tanque.nombre)}

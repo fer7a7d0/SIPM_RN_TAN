@@ -4,7 +4,12 @@ import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { obtenerTanquePorClave } from "@/lib/tanques"
 
-export type ActionResult = { ok: boolean; error?: string }
+export type ActionResult = {
+  ok: boolean
+  error?: string
+  latestDeleted?: boolean
+  restoredCantidad?: number
+}
 
 export async function actualizarNivel(formData: FormData): Promise<ActionResult> {
   const id = String(formData.get("id") || "").trim()
@@ -98,6 +103,7 @@ export async function obtenerHistorialTanque(materiaId: string, dias: 15 | 30 = 
     .eq("materia_prima_id", materiaId)
     .gte("creado_en", fechaInicio.toISOString())
     .order("creado_en", { ascending: false })
+    .order("id", { ascending: false })
 
   if (error) {
     console.error("Error obteniendo historial:", error)
@@ -129,23 +135,33 @@ export async function eliminarMedicionHistorial(materiaId: string, medicionId: s
   }
 
   const supabase = await createClient()
-  const { count, error } = await supabase
-    .from("TAN_mediciones")
-    .delete({ count: "exact" })
-    .eq("id", medicionId)
-    .eq("materia_prima_id", materiaId)
+  const { data, error } = await supabase.rpc("eliminar_medicion_historial", {
+    p_materia_id: materiaId,
+    p_medicion_id: medicionId,
+  })
 
   if (error) {
     console.error("Error eliminando medición del historial:", error)
     return { ok: false, error: "No se pudo eliminar el registro del historial." }
   }
 
-  if (count !== 1) {
+  if (!data || typeof data !== "object" || data.deleted !== true) {
     return {
       ok: false,
-      error: "No se eliminó el registro. Verifica que la política de borrado público esté aplicada en Supabase.",
+      error: "No se encontró el registro del historial.",
     }
   }
 
-  return { ok: true }
+  const latestDeleted = data.latest_deleted === true
+  const restoredCantidad = Number(data.restored_cantidad)
+  if (latestDeleted && !Number.isFinite(restoredCantidad)) {
+    console.error("La medición se eliminó pero la cantidad restaurada no es válida:", data)
+    return { ok: false, error: "Se eliminó el registro, pero no se pudo actualizar el resumen." }
+  }
+
+  return {
+    ok: true,
+    latestDeleted,
+    restoredCantidad: latestDeleted ? restoredCantidad : undefined,
+  }
 }
