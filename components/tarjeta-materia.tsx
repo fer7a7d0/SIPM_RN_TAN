@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react"
 import { actualizarNivel } from "@/app/actions"
 import { Button } from "@/components/ui/button"
+import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
+import { formatNumber } from "@/lib/format-number"
 
 export type Materia = {
   id: string
@@ -28,7 +30,7 @@ function clampNivel(valor: number, capacidadMaxima: number) {
 }
 
 function formatoCorto(valor: number) {
-  return Math.round(valor).toString()
+  return formatNumber(Math.round(valor))
 }
 
 function colorNivel(porcentaje: number) {
@@ -75,6 +77,11 @@ export function TarjetaMateria({
   const [isPending, startTransition] = useTransition()
   const nivelCapturado = clampNivel(Number(cantidad), capacidadMaxima)
   const porcentajeActual = clampPorcentaje((nivelCapturado / capacidadMaxima) * 100)
+  const porcentajeCalculado = Math.round(porcentajeActual)
+  const cantidadGasCalculada =
+    materia.capacidadGas !== null && Number.isFinite(materia.capacidadGas) && materia.capacidadGas > 0
+      ? Math.round((materia.capacidadGas * porcentajeCalculado) / 100)
+      : null
   const semaforo = materia.tieneMedicion
     ? colorNivel(porcentajeActual)
     : {
@@ -122,7 +129,17 @@ export function TarjetaMateria({
             {materia.tieneMedicion ? `${formatoCorto(porcentajeActual)}%` : "Sin registro"}
           </p>
           <p className="text-xs text-muted-foreground">
-            Rango máximo de lectura: {capacidadMaxima} {materia.unidad}
+            Rango máximo de lectura: {formatNumber(capacidadMaxima)} {materia.unidad}
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Cantidad estimada de gas:{" "}
+            <span className="font-semibold text-card-foreground">
+              {!materia.tieneMedicion
+                ? "Sin registro"
+                : cantidadGasCalculada === null || !materia.unidadCapacidadGas
+                  ? "Capacidad sin especificar"
+                  : `${formatNumber(cantidadGasCalculada)} ${materia.unidadCapacidadGas}`}
+            </span>
           </p>
         </div>
 
@@ -142,17 +159,15 @@ export function TarjetaMateria({
         <input type="hidden" name="nombre" value={nombreTanque} />
         <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium text-muted-foreground">
-            Registrar nivel medido (0 - {capacidadMaxima} {materia.unidad})
+            Registrar nivel medido (0 - {formatNumber(capacidadMaxima)} {materia.unidad})
           </span>
-            <input
+            <FormattedNumberInput
               name="cantidad"
-              type="number"
-              min="0"
+              defaultValue={cantidad}
+              onValueChange={setCantidad}
+              min={0}
               max={capacidadMaxima}
-              step="0.1"
-              inputMode="decimal"
-              value={cantidad}
-              onChange={(e) => setCantidad(e.target.value)}
+              step={0.1}
               disabled={!tanqueDisponible || isPending}
               required
               className="rounded-md border border-input bg-background px-3 py-2 text-foreground outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
