@@ -9,10 +9,11 @@ export type ActionResult = {
   latestDeleted?: boolean
   restoredCantidad?: number
   restoredUnidad?: string
+  tieneMedicion?: boolean
 }
 
 export type ResultadoActualizarNivel =
-  | { ok: true; cantidad: number; actualizadoEn: string }
+  | { ok: true; cantidad: number; actualizadoEn: string; tieneMedicion: true }
   | { ok: false; error: string }
 
 export type TanqueCatalogo = {
@@ -22,10 +23,11 @@ export type TanqueCatalogo = {
   unidad: string
   actualizado_en: string
   capacidad_maxima: number
+  tiene_medicion: boolean
 }
 
 type ResultadoTanque = { ok: true; tanque: TanqueCatalogo } | { ok: false; error: string }
-type DatosTanque = { nombre: string; unidad: string; capacidadMaxima: number; cantidad: number }
+type DatosTanque = { nombre: string; unidad: string; capacidadMaxima: number }
 
 function validarDatosTanque(
   formData: FormData,
@@ -33,7 +35,6 @@ function validarDatosTanque(
   const nombre = String(formData.get("nombre") ?? "").trim()
   const unidad = String(formData.get("unidad") ?? "").trim()
   const capacidadMaxima = Number(formData.get("capacidad_maxima"))
-  const cantidad = Number(formData.get("cantidad"))
 
   if (!nombre || nombre.length > 100) {
     return { ok: false, error: "El nombre es obligatorio y no puede exceder 100 caracteres." }
@@ -41,14 +42,11 @@ function validarDatosTanque(
   if (!Number.isFinite(capacidadMaxima) || capacidadMaxima <= 0) {
     return { ok: false, error: "La capacidad máxima debe ser mayor que cero." }
   }
-  if (!Number.isFinite(cantidad) || cantidad < 0 || cantidad > 100) {
-    return { ok: false, error: "La cantidad actual debe ser un porcentaje entre 0 y 100." }
-  }
   if (!unidad || unidad.length > 20) {
     return { ok: false, error: "La unidad es obligatoria y no puede exceder 20 caracteres." }
   }
 
-  return { ok: true, datos: { nombre, unidad, capacidadMaxima, cantidad } }
+  return { ok: true, datos: { nombre, unidad, capacidadMaxima } }
 }
 
 function normalizarTanque(tanque: {
@@ -58,6 +56,7 @@ function normalizarTanque(tanque: {
   unidad: string
   actualizado_en: string
   capacidad_maxima: number | string
+  tiene_medicion: boolean
 }): TanqueCatalogo {
   return {
     ...tanque,
@@ -80,7 +79,7 @@ export async function crearTanque(formData: FormData): Promise<ResultadoTanque> 
       unidad: valores.datos.unidad,
       actualizado_en: new Date().toISOString(),
     })
-    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima")
+    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima, tiene_medicion")
     .single()
 
   if (error) {
@@ -107,12 +106,11 @@ export async function actualizarTanque(formData: FormData): Promise<ResultadoTan
     .update({
       nombre: valores.datos.nombre,
       capacidad_maxima: valores.datos.capacidadMaxima,
-      cantidad: valores.datos.cantidad,
       unidad: valores.datos.unidad,
       actualizado_en: new Date().toISOString(),
     })
     .eq("id", id)
-    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima")
+    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima, tiene_medicion")
     .maybeSingle()
 
   if (error) {
@@ -215,7 +213,7 @@ export async function actualizarNivel(formData: FormData): Promise<ResultadoActu
   }
 
   revalidatePath("/")
-  return { ok: true, cantidad: porcentajeNuevo, actualizadoEn }
+  return { ok: true, cantidad: porcentajeNuevo, actualizadoEn, tieneMedicion: true }
 }
 
 export async function obtenerHistorialTanque(materiaId: string, dias: 15 | 30 = 15) {
@@ -287,9 +285,13 @@ export async function eliminarMedicionHistorial(materiaId: string, medicionId: s
   }
 
   const latestDeleted = data.latest_deleted === true
+  const tieneMedicion = data.has_measurements === true
   const restoredCantidad = Number(data.restored_cantidad)
   const restoredUnidad = typeof data.restored_unidad === "string" ? data.restored_unidad : ""
-  if (latestDeleted && (!Number.isFinite(restoredCantidad) || !restoredUnidad)) {
+  if (
+    latestDeleted &&
+    (!Number.isFinite(restoredCantidad) || !restoredUnidad || typeof data.has_measurements !== "boolean")
+  ) {
     console.error("La medición se eliminó pero la cantidad restaurada no es válida:", data)
     return { ok: false, error: "Se eliminó el registro, pero no se pudo actualizar el resumen." }
   }
@@ -299,5 +301,6 @@ export async function eliminarMedicionHistorial(materiaId: string, medicionId: s
     latestDeleted,
     restoredCantidad: latestDeleted ? restoredCantidad : undefined,
     restoredUnidad: latestDeleted ? restoredUnidad : undefined,
+    tieneMedicion: latestDeleted ? tieneMedicion : undefined,
   }
 }

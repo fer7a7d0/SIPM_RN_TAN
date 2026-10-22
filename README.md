@@ -26,7 +26,7 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 ## Supabase
 
-Apply the migrations in `supabase/migrations` to the Supabase project before using history deletion or tank catalog management. The unauthenticated `anon` role can delete history records and manage the tank catalog; anyone who can reach the app can therefore create, edit, or delete tanks. A tank cannot be deleted while it has measurements. Deleting a tank's latest measurement restores its current level from the previous measurement.
+Apply the migrations in `supabase/migrations` to the Supabase project before using history deletion or tank catalog management. The unauthenticated `anon` role can delete history records and manage the tank catalog; anyone who can reach the app can therefore create, edit, or delete tanks. A tank cannot be deleted while it has measurements. Deleting the latest remaining measurement sets the tank to “Sin registro”; if older measurements remain, the current level is restored from the latest remaining measurement.
 
 ## Learn More
 

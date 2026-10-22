@@ -12,6 +12,7 @@ export type Materia = {
   actualizado_en: string
   tanque?: string
   capacidadMaxima: number
+  tieneMedicion: boolean
 }
 
 function clampPorcentaje(valor: number) {
@@ -57,7 +58,12 @@ export function TarjetaMateria({
   onActualizado,
 }: {
   materia: Materia
-  onActualizado: (actualizacion: { id: string; cantidad: number; actualizado_en: string }) => void
+  onActualizado: (actualizacion: {
+    id: string
+    cantidad: number
+    actualizado_en: string
+    tieneMedicion: boolean
+  }) => void
 }) {
   const capacidadMaxima = materia.capacidadMaxima
   const nivelInicial = clampNivel((clampPorcentaje(materia.cantidad) * capacidadMaxima) / 100, capacidadMaxima)
@@ -67,7 +73,13 @@ export function TarjetaMateria({
   const [isPending, startTransition] = useTransition()
   const nivelCapturado = clampNivel(Number(cantidad), capacidadMaxima)
   const porcentajeActual = clampPorcentaje((nivelCapturado / capacidadMaxima) * 100)
-  const semaforo = colorNivel(porcentajeActual)
+  const semaforo = materia.tieneMedicion
+    ? colorNivel(porcentajeActual)
+    : {
+        barra: "bg-muted",
+        chip: "bg-muted text-muted-foreground border-border",
+        estado: "Sin registro",
+      }
   const nombreTanque = materia.tanque ?? materia.nombre
   const tanqueDisponible = Boolean(materia.id)
 
@@ -82,6 +94,7 @@ export function TarjetaMateria({
           id: materia.id,
           cantidad: res.cantidad,
           actualizado_en: res.actualizadoEn,
+          tieneMedicion: true,
         })
         setMensaje({ tipo: "ok", texto: "Nivel registrado correctamente." })
         setNota("")
@@ -103,7 +116,9 @@ export function TarjetaMateria({
       <div className="grid grid-cols-[1fr_auto] items-center gap-4">
         <div>
           <p className="text-sm font-medium text-muted-foreground">Nivel actual</p>
-          <p className="mt-1 text-3xl font-bold tabular-nums text-card-foreground">{formatoCorto(porcentajeActual)}%</p>
+          <p className="mt-1 text-3xl font-bold tabular-nums text-card-foreground">
+            {materia.tieneMedicion ? `${formatoCorto(porcentajeActual)}%` : "Sin registro"}
+          </p>
           <p className="text-xs text-muted-foreground">
             Capacidad maxima: {capacidadMaxima} {materia.unidad}
           </p>
@@ -113,7 +128,7 @@ export function TarjetaMateria({
           <div className="absolute inset-x-1 bottom-1 top-1 overflow-hidden rounded-t-[1.2rem] rounded-b-md bg-gradient-to-b from-muted to-background">
             <div
               className={`absolute inset-x-0 bottom-0 transition-all duration-500 ${semaforo.barra}`}
-              style={{ height: `${porcentajeActual}%` }}
+              style={{ height: `${materia.tieneMedicion ? porcentajeActual : 0}%` }}
             />
           </div>
           <div className="absolute -top-2 left-1/2 h-2 w-10 -translate-x-1/2 rounded-t-md border border-border bg-muted" />

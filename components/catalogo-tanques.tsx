@@ -49,8 +49,6 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
     formData.set("unidad", unidad)
     if (tanqueEditando) {
       formData.set("id", tanqueEditando.id)
-    } else {
-      formData.set("cantidad", "0")
     }
 
     try {
@@ -182,31 +180,16 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
                   />
                 </label>
                 {tanqueEditando && (
-                  <>
-                    <label className="flex flex-col gap-1 text-sm">
-                      <span className="font-medium">Cantidad actual (%)</span>
-                      <input
-                        name="cantidad"
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="any"
-                        defaultValue={tanqueEditando.cantidad}
-                        required
-                        className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
-                      />
-                    </label>
-                    <label className="flex flex-col gap-1 text-sm">
-                      <span className="font-medium">Unidad de lectura</span>
-                      <input
-                        value={unidad}
-                        onChange={(event) => setUnidad(event.target.value)}
-                        maxLength={20}
-                        required
-                        className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
-                      />
-                    </label>
-                  </>
+                  <label className="flex flex-col gap-1 text-sm">
+                    <span className="font-medium">Unidad de lectura</span>
+                    <input
+                      value={unidad}
+                      onChange={(event) => setUnidad(event.target.value)}
+                      maxLength={20}
+                      required
+                      className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  </label>
                 )}
                 {!tanqueEditando && (
                   <p className="sm:col-span-2 text-xs text-muted-foreground">
@@ -245,7 +228,8 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold">{tanque.nombre}</p>
                       <p className="text-xs text-muted-foreground">
-                        Capacidad: {tanque.capacidad_maxima} {tanque.unidad} · Nivel actual: {tanque.cantidad}%
+                        Capacidad: {tanque.capacidad_maxima} {tanque.unidad} · Nivel actual:{" "}
+                        {tanque.tiene_medicion ? `${tanque.cantidad}%` : "Sin registro"}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1">

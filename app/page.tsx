@@ -7,7 +7,15 @@ function clampPorcentaje(valor: number) {
   return Math.round(Math.max(0, Math.min(100, valor)))
 }
 
-function estadoNivel(porcentaje: number) {
+function estadoNivel(porcentaje: number, tieneMedicion: boolean) {
+  if (!tieneMedicion) {
+    return {
+      texto: "Sin registro",
+      colorBarra: "bg-muted",
+      colorChip: "bg-muted text-muted-foreground border-border",
+    }
+  }
+
   if (porcentaje < 30) {
     return {
       texto: "Critico",
@@ -36,7 +44,7 @@ export default async function Home() {
 
   const { data, error } = await supabase
     .from("TAN_tanques_termo")
-    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima")
+    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima, tiene_medicion")
     .order("nombre", { ascending: true })
 
   const materias: Materia[] = (data ?? []).map((tanque) => ({
@@ -47,6 +55,7 @@ export default async function Home() {
     unidad: tanque.unidad,
     actualizado_en: tanque.actualizado_en,
     capacidadMaxima: Number(tanque.capacidad_maxima),
+    tieneMedicion: tanque.tiene_medicion,
   }))
 
   const resumenTanques = materias
@@ -56,7 +65,8 @@ export default async function Home() {
         id: materia.id,
         nombre: materia.tanque ?? materia.nombre,
         porcentaje,
-        estado: estadoNivel(porcentaje),
+        tieneMedicion: materia.tieneMedicion,
+        estado: estadoNivel(porcentaje, materia.tieneMedicion),
       }
     })
     .sort((a, b) => a.porcentaje - b.porcentaje)

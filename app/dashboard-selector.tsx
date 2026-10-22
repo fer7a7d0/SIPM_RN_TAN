@@ -17,6 +17,7 @@ type ResumenTanque = {
   id: string
   nombre: string
   porcentaje: number
+  tieneMedicion: boolean
   estado: {
     texto: string
     colorBarra: string
@@ -33,12 +34,23 @@ const EMOJI_ESTADO: Record<string, string> = {
 function generarTextoResumen(resumenTanques: ResumenTanque[]) {
   const fecha = new Date().toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" })
   const lineas = resumenTanques.map(
-    (t) => `${EMOJI_ESTADO[t.estado.texto] ?? "\u26AA"} ${t.nombre}: ${t.porcentaje}% (${t.estado.texto})`,
+    (t) =>
+      `${EMOJI_ESTADO[t.estado.texto] ?? "\u26AA"} ${t.nombre}: ${
+        t.tieneMedicion ? `${t.porcentaje}% (${t.estado.texto})` : "Sin registro"
+      }`,
   )
   return [`\u{1F4CA} Resumen de niveles - ${fecha}`, "", ...lineas].join("\n")
 }
 
-function obtenerEstadoNivel(porcentaje: number): ResumenTanque["estado"] {
+function obtenerEstadoNivel(porcentaje: number, tieneMedicion = true): ResumenTanque["estado"] {
+  if (!tieneMedicion) {
+    return {
+      texto: "Sin registro",
+      colorBarra: "bg-muted",
+      colorChip: "bg-muted text-muted-foreground border-border",
+    }
+  }
+
   if (porcentaje < 30) {
     return {
       texto: "Critico",
@@ -68,7 +80,8 @@ function crearResumenTanque(materia: Materia): ResumenTanque {
     id: materia.id,
     nombre: materia.tanque ?? materia.nombre,
     porcentaje,
-    estado: obtenerEstadoNivel(porcentaje),
+    tieneMedicion: materia.tieneMedicion,
+    estado: obtenerEstadoNivel(porcentaje, materia.tieneMedicion),
   }
 }
 
@@ -126,6 +139,7 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
     unidad: materia.unidad,
     actualizado_en: materia.actualizado_en,
     capacidad_maxima: materia.capacidadMaxima,
+    tiene_medicion: materia.tieneMedicion,
   }))
 
   function agregarTanque(tanque: TanqueCatalogo) {
@@ -133,6 +147,7 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
       ...tanque,
       tanque: tanque.nombre,
       capacidadMaxima: tanque.capacidad_maxima,
+      tieneMedicion: tanque.tiene_medicion,
     }
     setMateriasActuales((actuales) => [...actuales, materia].sort((a, b) => a.nombre.localeCompare(b.nombre)))
     setResumenActual((actuales) =>
@@ -146,6 +161,7 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
       ...tanque,
       tanque: tanque.nombre,
       capacidadMaxima: tanque.capacidad_maxima,
+      tieneMedicion: tanque.tiene_medicion,
     }
     setMateriasActuales((actuales) =>
       actuales.map((actual) => (actual.id === tanque.id ? materia : actual)),
@@ -180,11 +196,17 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
     id: string
     cantidad: number
     actualizado_en: string
+    tieneMedicion: boolean
   }) {
     setMateriasActuales((actuales) =>
       actuales.map((materia) =>
         materia.id === actualizacion.id
-          ? { ...materia, cantidad: actualizacion.cantidad, actualizado_en: actualizacion.actualizado_en }
+          ? {
+              ...materia,
+              cantidad: actualizacion.cantidad,
+              actualizado_en: actualizacion.actualizado_en,
+              tieneMedicion: actualizacion.tieneMedicion,
+            }
           : materia,
       ),
     )
@@ -195,7 +217,8 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
             ? {
                 ...tanque,
                 porcentaje: actualizacion.cantidad,
-                estado: obtenerEstadoNivel(actualizacion.cantidad),
+                tieneMedicion: actualizacion.tieneMedicion,
+                estado: obtenerEstadoNivel(actualizacion.cantidad, actualizacion.tieneMedicion),
               }
             : tanque,
         )
@@ -236,13 +259,16 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
       if (
         resultado.latestDeleted &&
         resultado.restoredCantidad !== undefined &&
-        resultado.restoredUnidad !== undefined
+        resultado.restoredUnidad !== undefined &&
+        resultado.tieneMedicion !== undefined
       ) {
+        const tieneMedicion = resultado.tieneMedicion
         const porcentaje = Math.round(Math.max(0, Math.min(100, resultado.restoredCantidad)))
         const materiaActualizada = {
           ...materiaGrafico,
           cantidad: porcentaje,
           unidad: resultado.restoredUnidad,
+          tieneMedicion,
         }
         setMateriasActuales((materias) =>
           materias.map((materia) => (materia.id === materiaGrafico.id ? materiaActualizada : materia)),
@@ -250,7 +276,12 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
         setResumenActual((resumen) =>
           resumen.map((tanque) =>
             tanque.id === materiaGrafico.id
-              ? { ...tanque, porcentaje, estado: obtenerEstadoNivel(porcentaje) }
+              ? {
+                  ...tanque,
+                  porcentaje,
+                  tieneMedicion,
+                  estado: obtenerEstadoNivel(porcentaje, tieneMedicion),
+                }
               : tanque,
           ).sort((a, b) => a.porcentaje - b.porcentaje),
         )
@@ -315,7 +346,7 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
                         <p className="text-sm font-medium text-card-foreground">{tanque.nombre}</p>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-semibold tabular-nums text-card-foreground">
-                            {tanque.porcentaje}%
+                            {tanque.tieneMedicion ? `${tanque.porcentaje}%` : "Sin registro"}
                           </span>
                           <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${tanque.estado.colorChip}`}>
                             {tanque.estado.texto}
@@ -344,7 +375,7 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
                       <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
                         <div
                           className={`h-full rounded-full transition-all duration-500 ${tanque.estado.colorBarra}`}
-                          style={{ width: `${tanque.porcentaje}%` }}
+                          style={{ width: `${tanque.tieneMedicion ? tanque.porcentaje : 0}%` }}
                         />
                       </div>
                     </button>
