@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { UNIDADES_CAPACIDAD_GAS } from "@/lib/unidades-tanques"
 import { revalidatePath } from "next/cache"
 
 export type ActionResult = {
@@ -23,12 +24,19 @@ export type TanqueCatalogo = {
   unidad: string
   actualizado_en: string
   capacidad_maxima: number
-  capacidad_m3: number | null
+  capacidad_gas: number | null
+  unidad_capacidad_gas: string | null
   tiene_medicion: boolean
 }
 
 type ResultadoTanque = { ok: true; tanque: TanqueCatalogo } | { ok: false; error: string }
-type DatosTanque = { nombre: string; unidad: string; capacidadMaxima: number; capacidadM3: number }
+type DatosTanque = {
+  nombre: string
+  unidad: string
+  capacidadMaxima: number
+  capacidadGas: number
+  unidadCapacidadGas: string
+}
 
 function validarDatosTanque(
   formData: FormData,
@@ -36,22 +44,32 @@ function validarDatosTanque(
   const nombre = String(formData.get("nombre") ?? "").trim()
   const unidad = String(formData.get("unidad") ?? "").trim()
   const capacidadMaxima = Number(formData.get("capacidad_maxima"))
-  const capacidadM3 = Number(formData.get("capacidad_m3"))
+  const capacidadGas = Number(formData.get("capacidad_gas"))
+  const unidadCapacidadGas = String(formData.get("unidad_capacidad_gas") ?? "").trim()
 
   if (!nombre || nombre.length > 100) {
     return { ok: false, error: "El nombre es obligatorio y no puede exceder 100 caracteres." }
   }
   if (!Number.isFinite(capacidadMaxima) || capacidadMaxima <= 0) {
-    return { ok: false, error: "La capacidad máxima debe ser mayor que cero." }
+    return { ok: false, error: "El rango máximo de lectura debe ser mayor que cero." }
   }
-  if (!Number.isFinite(capacidadM3) || capacidadM3 <= 0) {
-    return { ok: false, error: "La capacidad en m3 debe ser mayor que cero." }
+  if (!Number.isFinite(capacidadGas) || capacidadGas <= 0) {
+    return { ok: false, error: "La capacidad máxima de gas debe ser mayor que cero." }
   }
   if (!unidad || unidad.length > 20) {
-    return { ok: false, error: "La unidad es obligatoria y no puede exceder 20 caracteres." }
+    return { ok: false, error: "La unidad de lectura es obligatoria." }
+  }
+  if (unidad.length > 20) {
+    return { ok: false, error: "La unidad de lectura no puede exceder 20 caracteres." }
+  }
+  if (!(UNIDADES_CAPACIDAD_GAS as readonly string[]).includes(unidadCapacidadGas)) {
+    return { ok: false, error: "Selecciona kg o m³ como unidad de capacidad del gas." }
   }
 
-  return { ok: true, datos: { nombre, unidad, capacidadMaxima, capacidadM3 } }
+  return {
+    ok: true,
+    datos: { nombre, unidad, capacidadMaxima, capacidadGas, unidadCapacidadGas },
+  }
 }
 
 function normalizarTanque(tanque: {
@@ -61,14 +79,15 @@ function normalizarTanque(tanque: {
   unidad: string
   actualizado_en: string
   capacidad_maxima: number | string
-  capacidad_m3: number | string | null
+  capacidad_gas: number | string | null
+  unidad_capacidad_gas: string | null
   tiene_medicion: boolean
 }): TanqueCatalogo {
   return {
     ...tanque,
     cantidad: Number(tanque.cantidad),
     capacidad_maxima: Number(tanque.capacidad_maxima),
-    capacidad_m3: tanque.capacidad_m3 === null ? null : Number(tanque.capacidad_m3),
+    capacidad_gas: tanque.capacidad_gas === null ? null : Number(tanque.capacidad_gas),
   }
 }
 
@@ -82,12 +101,13 @@ export async function crearTanque(formData: FormData): Promise<ResultadoTanque> 
     .insert({
       nombre: valores.datos.nombre,
       capacidad_maxima: valores.datos.capacidadMaxima,
-      capacidad_m3: valores.datos.capacidadM3,
+      capacidad_gas: valores.datos.capacidadGas,
+      unidad_capacidad_gas: valores.datos.unidadCapacidadGas,
       cantidad: 0,
       unidad: valores.datos.unidad,
       actualizado_en: new Date().toISOString(),
     })
-    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima, capacidad_m3, tiene_medicion")
+    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima, capacidad_gas, unidad_capacidad_gas, tiene_medicion")
     .single()
 
   if (error) {
@@ -114,12 +134,13 @@ export async function actualizarTanque(formData: FormData): Promise<ResultadoTan
     .update({
       nombre: valores.datos.nombre,
       capacidad_maxima: valores.datos.capacidadMaxima,
-      capacidad_m3: valores.datos.capacidadM3,
+      capacidad_gas: valores.datos.capacidadGas,
+      unidad_capacidad_gas: valores.datos.unidadCapacidadGas,
       unidad: valores.datos.unidad,
       actualizado_en: new Date().toISOString(),
     })
     .eq("id", id)
-    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima, capacidad_m3, tiene_medicion")
+    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima, capacidad_gas, unidad_capacidad_gas, tiene_medicion")
     .maybeSingle()
 
   if (error) {

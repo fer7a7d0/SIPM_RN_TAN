@@ -4,6 +4,7 @@ import { useState } from "react"
 import { actualizarTanque, crearTanque, eliminarTanque, type TanqueCatalogo } from "@/app/actions"
 import { Button } from "@/components/ui/button"
 import { Pencil, Plus, Trash2, X } from "lucide-react"
+import { UNIDADES_CAPACIDAD_GAS, UNIDADES_LECTURA } from "@/lib/unidades-tanques"
 
 type CatalogoTanquesProps = {
   tanques: TanqueCatalogo[]
@@ -16,13 +17,15 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
   const [abierto, setAbierto] = useState(false)
   const [tanqueEditando, setTanqueEditando] = useState<TanqueCatalogo | null>(null)
   const [agregando, setAgregando] = useState(false)
-  const [unidad, setUnidad] = useState("%")
+  const [unidad, setUnidad] = useState<string>(UNIDADES_LECTURA[0])
+  const [unidadCapacidadGas, setUnidadCapacidadGas] = useState<string>(UNIDADES_CAPACIDAD_GAS[1])
   const [pendiente, setPendiente] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   function abrirNuevo() {
     setTanqueEditando(null)
-    setUnidad("%")
+    setUnidad(UNIDADES_LECTURA[0])
+    setUnidadCapacidadGas(UNIDADES_CAPACIDAD_GAS[1])
     setError(null)
     setAgregando(true)
   }
@@ -30,6 +33,7 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
   function abrirEdicion(tanque: TanqueCatalogo) {
     setTanqueEditando(tanque)
     setUnidad(tanque.unidad)
+    setUnidadCapacidadGas(tanque.unidad_capacidad_gas ?? UNIDADES_CAPACIDAD_GAS[1])
     setError(null)
     setAgregando(false)
   }
@@ -47,6 +51,7 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
 
     const formData = new FormData(event.currentTarget)
     formData.set("unidad", unidad)
+    formData.set("unidad_capacidad_gas", unidadCapacidadGas)
     if (tanqueEditando) {
       formData.set("id", tanqueEditando.id)
     }
@@ -168,7 +173,7 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
                   />
                 </label>
                 <label className="flex flex-col gap-1 text-sm">
-                  <span className="font-medium">Capacidad máxima</span>
+                  <span className="font-medium">Rango máximo de lectura</span>
                   <input
                     name="capacidad_maxima"
                     type="number"
@@ -180,32 +185,53 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
                   />
                 </label>
                 <label className="flex flex-col gap-1 text-sm">
-                  <span className="font-medium">Capacidad en m3</span>
+                  <span className="font-medium">Capacidad máxima de gas</span>
                   <input
-                    name="capacidad_m3"
+                    name="capacidad_gas"
                     type="number"
                     min="0.01"
                     step="any"
-                    defaultValue={tanqueEditando?.capacidad_m3 ?? ""}
+                    defaultValue={tanqueEditando?.capacidad_gas ?? ""}
                     required
                     className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
                   />
                 </label>
-                {tanqueEditando && (
-                  <label className="flex flex-col gap-1 text-sm">
-                    <span className="font-medium">Unidad de lectura</span>
-                    <input
-                      value={unidad}
-                      onChange={(event) => setUnidad(event.target.value)}
-                      maxLength={20}
-                      required
-                      className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
-                    />
-                  </label>
-                )}
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="font-medium">Unidad de lectura del instrumento</span>
+                  <select
+                    value={unidad}
+                    onChange={(event) => setUnidad(event.target.value)}
+                    required
+                    className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {!UNIDADES_LECTURA.some((opcion) => opcion === unidad) && (
+                      <option value={unidad}>Actual: {unidad}</option>
+                    )}
+                    {UNIDADES_LECTURA.map((opcion) => (
+                      <option key={opcion} value={opcion}>
+                        {opcion}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="font-medium">Unidad de capacidad del gas</span>
+                  <select
+                    value={unidadCapacidadGas}
+                    onChange={(event) => setUnidadCapacidadGas(event.target.value)}
+                    required
+                    className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {UNIDADES_CAPACIDAD_GAS.map((opcion) => (
+                      <option key={opcion} value={opcion}>
+                        {opcion}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 {!tanqueEditando && (
                   <p className="sm:col-span-2 text-xs text-muted-foreground">
-                    El tanque se creará con nivel inicial de 0% y unidad %.
+                    El tanque se creará sin mediciones, con un nivel inicial de 0%.
                   </p>
                 )}
                 {error && (
@@ -240,11 +266,12 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold">{tanque.nombre}</p>
                       <p className="text-xs text-muted-foreground">
-                        Capacidad: {tanque.capacidad_maxima} {tanque.unidad} · Nivel actual:{" "}
+                        Rango máximo de lectura: {tanque.capacidad_maxima} {tanque.unidad} · Nivel actual:{" "}
                         {tanque.tiene_medicion ? `${tanque.cantidad}%` : "Sin registro"}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Capacidad en m3: {tanque.capacidad_m3 ?? "Sin especificar"}
+                        Capacidad máxima de gas: {tanque.capacidad_gas ?? "Sin especificar"}{" "}
+                        {tanque.unidad_capacidad_gas ?? ""}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1">

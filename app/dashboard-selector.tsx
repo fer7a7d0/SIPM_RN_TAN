@@ -139,7 +139,8 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
     unidad: materia.unidad,
     actualizado_en: materia.actualizado_en,
     capacidad_maxima: materia.capacidadMaxima,
-    capacidad_m3: materia.capacidadM3,
+    capacidad_gas: materia.capacidadGas,
+    unidad_capacidad_gas: materia.unidadCapacidadGas,
     tiene_medicion: materia.tieneMedicion,
   }))
 
@@ -148,7 +149,8 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
       ...tanque,
       tanque: tanque.nombre,
       capacidadMaxima: tanque.capacidad_maxima,
-      capacidadM3: tanque.capacidad_m3,
+      capacidadGas: tanque.capacidad_gas,
+      unidadCapacidadGas: tanque.unidad_capacidad_gas,
       tieneMedicion: tanque.tiene_medicion,
     }
     setMateriasActuales((actuales) => [...actuales, materia].sort((a, b) => a.nombre.localeCompare(b.nombre)))
@@ -163,7 +165,8 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
       ...tanque,
       tanque: tanque.nombre,
       capacidadMaxima: tanque.capacidad_maxima,
-      capacidadM3: tanque.capacidad_m3,
+      capacidadGas: tanque.capacidad_gas,
+      unidadCapacidadGas: tanque.unidad_capacidad_gas,
       tieneMedicion: tanque.tiene_medicion,
     }
     setMateriasActuales((actuales) =>

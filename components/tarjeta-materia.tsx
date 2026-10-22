@@ -12,7 +12,8 @@ export type Materia = {
   actualizado_en: string
   tanque?: string
   capacidadMaxima: number
-  capacidadM3: number | null
+  capacidadGas: number | null
+  unidadCapacidadGas: string | null
   tieneMedicion: boolean
 }
 
@@ -121,7 +122,7 @@ export function TarjetaMateria({
             {materia.tieneMedicion ? `${formatoCorto(porcentajeActual)}%` : "Sin registro"}
           </p>
           <p className="text-xs text-muted-foreground">
-            Capacidad maxima: {capacidadMaxima} {materia.unidad}
+            Rango máximo de lectura: {capacidadMaxima} {materia.unidad}
           </p>
         </div>
 
