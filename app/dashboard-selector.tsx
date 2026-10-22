@@ -121,7 +121,7 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
         <header ref={headerRef} className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6">
           <p className="text-xs font-semibold tracking-[0.24em] text-primary uppercase">MONITOREO DE TANQUES TERMO</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-card-foreground text-balance">
-            Tanques termo
+            Registro de mediciones
           </h1>
           <p className="mt-2 max-w-3xl text-muted-foreground text-pretty">
             Nivel actual
