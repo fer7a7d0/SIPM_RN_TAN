@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { actualizarTanque, crearTanque, eliminarTanque, type TanqueCatalogo } from "@/app/actions"
 import { Button } from "@/components/ui/button"
-import { Boxes, Pencil, Plus, Trash2, X } from "lucide-react"
+import { Pencil, Plus, Trash2, X } from "lucide-react"
 
 type CatalogoTanquesProps = {
   tanques: TanqueCatalogo[]
@@ -110,7 +110,7 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
           setAbierto(true)
         }}
       >
-        <Boxes aria-hidden="true" />
+        <Plus aria-hidden="true" />
       </Button>
 
       {abierto && (

@@ -52,7 +52,13 @@ function colorNivel(porcentaje: number) {
   }
 }
 
-export function TarjetaMateria({ materia }: { materia: Materia }) {
+export function TarjetaMateria({
+  materia,
+  onActualizado,
+}: {
+  materia: Materia
+  onActualizado: (actualizacion: { id: string; cantidad: number; actualizado_en: string }) => void
+}) {
   const capacidadMaxima = materia.capacidadMaxima
   const nivelInicial = clampNivel((clampPorcentaje(materia.cantidad) * capacidadMaxima) / 100, capacidadMaxima)
   const [cantidad, setCantidad] = useState(formatoCorto(nivelInicial))
@@ -72,6 +78,11 @@ export function TarjetaMateria({ materia }: { materia: Materia }) {
     startTransition(async () => {
       const res = await actualizarNivel(formData)
       if (res.ok) {
+        onActualizado({
+          id: materia.id,
+          cantidad: res.cantidad,
+          actualizado_en: res.actualizadoEn,
+        })
         setMensaje({ tipo: "ok", texto: "Nivel registrado correctamente." })
         setNota("")
       } else {

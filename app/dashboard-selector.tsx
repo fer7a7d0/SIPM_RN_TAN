@@ -176,6 +176,33 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
     }
   }
 
+  function actualizarNivelResumen(actualizacion: {
+    id: string
+    cantidad: number
+    actualizado_en: string
+  }) {
+    setMateriasActuales((actuales) =>
+      actuales.map((materia) =>
+        materia.id === actualizacion.id
+          ? { ...materia, cantidad: actualizacion.cantidad, actualizado_en: actualizacion.actualizado_en }
+          : materia,
+      ),
+    )
+    setResumenActual((actuales) =>
+      actuales
+        .map((tanque) =>
+          tanque.id === actualizacion.id
+            ? {
+                ...tanque,
+                porcentaje: actualizacion.cantidad,
+                estado: obtenerEstadoNivel(actualizacion.cantidad),
+              }
+            : tanque,
+        )
+        .sort((a, b) => a.porcentaje - b.porcentaje),
+    )
+  }
+
   useEffect(() => {
     if (graficoSeleccionado && materiaGrafico?.id) {
       let activo = true
@@ -260,6 +287,12 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
+                  <CatalogoTanques
+                    tanques={catalogoTanques}
+                    onCrear={agregarTanque}
+                    onActualizar={actualizarTanqueCatalogo}
+                    onEliminar={quitarTanque}
+                  />
                   <button
                     onClick={compartirWhatsApp}
                     disabled={isSharing}
@@ -269,12 +302,6 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
                   >
                     <Share2 className="h-3.5 w-3.5" />
                   </button>
-                  <CatalogoTanques
-                    tanques={catalogoTanques}
-                    onCrear={agregarTanque}
-                    onActualizar={actualizarTanqueCatalogo}
-                    onEliminar={quitarTanque}
-                  />
                 </div>
               </div>
               <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -372,7 +399,10 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
             </Button>
             <div className="flex justify-center">
               <div className="w-full max-w-sm">
-                <TarjetaMateria materia={materiaSeleccionada} />
+                <TarjetaMateria
+                  materia={materiaSeleccionada}
+                  onActualizado={actualizarNivelResumen}
+                />
               </div>
             </div>
           </section>

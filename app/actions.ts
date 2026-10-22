@@ -11,6 +11,10 @@ export type ActionResult = {
   restoredUnidad?: string
 }
 
+export type ResultadoActualizarNivel =
+  | { ok: true; cantidad: number; actualizadoEn: string }
+  | { ok: false; error: string }
+
 export type TanqueCatalogo = {
   id: string
   nombre: string
@@ -149,7 +153,7 @@ export async function eliminarTanque(id: string): Promise<ActionResult> {
   return { ok: true }
 }
 
-export async function actualizarNivel(formData: FormData): Promise<ActionResult> {
+export async function actualizarNivel(formData: FormData): Promise<ResultadoActualizarNivel> {
   const id = String(formData.get("id") || "").trim()
   const cantidadRaw = String(formData.get("cantidad") || "")
   const nota = String(formData.get("nota") || "").trim()
@@ -182,11 +186,12 @@ export async function actualizarNivel(formData: FormData): Promise<ActionResult>
 
   const porcentajeNuevo = Math.round((nivelMedido / capacidadMaxima) * 100)
   const cantidadAnterior = Number(actual.cantidad) || 0
+  const actualizadoEn = new Date().toISOString()
 
   // Actualizar el nivel actual
   const { error: updateError } = await supabase
     .from("TAN_tanques_termo")
-    .update({ cantidad: porcentajeNuevo, actualizado_en: new Date().toISOString() })
+    .update({ cantidad: porcentajeNuevo, actualizado_en: actualizadoEn })
     .eq("id", id)
 
   if (updateError) {
@@ -210,7 +215,7 @@ export async function actualizarNivel(formData: FormData): Promise<ActionResult>
   }
 
   revalidatePath("/")
-  return { ok: true }
+  return { ok: true, cantidad: porcentajeNuevo, actualizadoEn }
 }
 
 export async function obtenerHistorialTanque(materiaId: string, dias: 15 | 30 = 15) {
