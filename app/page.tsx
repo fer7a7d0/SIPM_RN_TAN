@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
 import { type Materia } from "@/components/tarjeta-materia"
-import { TANQUES, normalizarNombre } from "@/lib/tanques"
 import { DashboardSelector } from "@/app/dashboard-selector"
 
 function clampPorcentaje(valor: number) {
@@ -37,42 +36,24 @@ export default async function Home() {
 
   const { data, error } = await supabase
     .from("TAN_tanques_termo")
-    .select("id, nombre, cantidad, unidad, actualizado_en")
+    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima")
     .order("nombre", { ascending: true })
 
-  const materiasDB = (data ?? []) as Materia[]
-  const materiasNormalizadas = new Map(materiasDB.map((m) => [normalizarNombre(m.nombre), m]))
-
-  const materias = TANQUES.map((tanque) => {
-    const encontrada = tanque.aliases
-      .map((a) => materiasNormalizadas.get(normalizarNombre(a)))
-      .find(Boolean)
-
-    if (encontrada) {
-      return {
-        ...encontrada,
-        tanque: tanque.nombreUI,
-        claveTanque: tanque.clave,
-        capacidadMaxima: tanque.capacidadMaxima,
-      }
-    }
-
-    return {
-      id: "",
-      nombre: tanque.nombreUI,
-      cantidad: 0,
-      unidad: "%",
-      actualizado_en: "",
-      tanque: tanque.nombreUI,
-      claveTanque: tanque.clave,
-      capacidadMaxima: tanque.capacidadMaxima,
-    }
-  })
+  const materias: Materia[] = (data ?? []).map((tanque) => ({
+    id: tanque.id,
+    nombre: tanque.nombre,
+    tanque: tanque.nombre,
+    cantidad: Number(tanque.cantidad),
+    unidad: tanque.unidad,
+    actualizado_en: tanque.actualizado_en,
+    capacidadMaxima: Number(tanque.capacidad_maxima),
+  }))
 
   const resumenTanques = materias
     .map((materia) => {
       const porcentaje = clampPorcentaje(Number(materia.cantidad))
       return {
+        id: materia.id,
         nombre: materia.tanque ?? materia.nombre,
         porcentaje,
         estado: estadoNivel(porcentaje),
@@ -84,7 +65,7 @@ export default async function Home() {
     <DashboardSelector
       resumenTanques={resumenTanques}
       materias={materias}
-      error={error}
+      error={Boolean(error)}
     />
   )
 }

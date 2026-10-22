@@ -11,8 +11,7 @@ export type Materia = {
   unidad: string
   actualizado_en: string
   tanque?: string
-  claveTanque?: string
-  capacidadMaxima?: number
+  capacidadMaxima: number
 }
 
 function clampPorcentaje(valor: number) {
@@ -54,7 +53,7 @@ function colorNivel(porcentaje: number) {
 }
 
 export function TarjetaMateria({ materia }: { materia: Materia }) {
-  const capacidadMaxima = materia.capacidadMaxima ?? 100
+  const capacidadMaxima = materia.capacidadMaxima
   const nivelInicial = clampNivel((clampPorcentaje(materia.cantidad) * capacidadMaxima) / 100, capacidadMaxima)
   const [cantidad, setCantidad] = useState(formatoCorto(nivelInicial))
   const [nota, setNota] = useState("")
@@ -94,7 +93,9 @@ export function TarjetaMateria({ materia }: { materia: Materia }) {
         <div>
           <p className="text-sm font-medium text-muted-foreground">Nivel actual</p>
           <p className="mt-1 text-3xl font-bold tabular-nums text-card-foreground">{formatoCorto(porcentajeActual)}%</p>
-          <p className="text-xs text-muted-foreground">Capacidad maxima: {capacidadMaxima}</p>
+          <p className="text-xs text-muted-foreground">
+            Capacidad maxima: {capacidadMaxima} {materia.unidad}
+          </p>
         </div>
 
         <div className="relative h-44 w-20 overflow-hidden rounded-t-[1.6rem] rounded-b-lg border-2 border-border bg-muted/80 p-1">
@@ -111,11 +112,10 @@ export function TarjetaMateria({ materia }: { materia: Materia }) {
       <form onSubmit={onSubmit} className="flex flex-col gap-3">
         <input type="hidden" name="id" value={materia.id} />
         <input type="hidden" name="nombre" value={nombreTanque} />
-        <input type="hidden" name="tanqueClave" value={materia.claveTanque ?? ""} />
-        <input type="hidden" name="unidad" value="%" />
-
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-muted-foreground">Registrar nivel medido (0 - {capacidadMaxima})</span>
+          <span className="font-medium text-muted-foreground">
+            Registrar nivel medido (0 - {capacidadMaxima} {materia.unidad})
+          </span>
             <input
               name="cantidad"
               type="number"

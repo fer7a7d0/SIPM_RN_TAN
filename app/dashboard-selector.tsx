@@ -2,13 +2,19 @@
 
 import { useEffect, useRef, useState, useTransition } from "react"
 import { TarjetaMateria, type Materia } from "@/components/tarjeta-materia"
+import { CatalogoTanques } from "@/components/catalogo-tanques"
 import { GraficoHistorico } from "@/components/grafico-historico"
 import { Button } from "@/components/ui/button"
 import { LineChart, Share2 } from "lucide-react"
 import { toPng } from "html-to-image"
-import { eliminarMedicionHistorial, obtenerHistorialTanque } from "@/app/actions"
+import {
+  eliminarMedicionHistorial,
+  obtenerHistorialTanque,
+  type TanqueCatalogo,
+} from "@/app/actions"
 
 type ResumenTanque = {
+  id: string
   nombre: string
   porcentaje: number
   estado: {
@@ -56,6 +62,16 @@ function obtenerEstadoNivel(porcentaje: number): ResumenTanque["estado"] {
   }
 }
 
+function crearResumenTanque(materia: Materia): ResumenTanque {
+  const porcentaje = Math.round(Math.max(0, Math.min(100, Number(materia.cantidad) || 0)))
+  return {
+    id: materia.id,
+    nombre: materia.tanque ?? materia.nombre,
+    porcentaje,
+    estado: obtenerEstadoNivel(porcentaje),
+  }
+}
+
 type DashboardSelectorProps = {
   resumenTanques: ResumenTanque[]
   materias: Materia[]
@@ -64,6 +80,7 @@ type DashboardSelectorProps = {
 
 export function DashboardSelector({ resumenTanques, materias, error }: DashboardSelectorProps) {
   const [resumenActual, setResumenActual] = useState(resumenTanques)
+  const [materiasActuales, setMateriasActuales] = useState(materias)
   const [tanqueSeleccionado, setTanqueSeleccionado] = useState<string | null>(null)
   const [graficoSeleccionado, setGraficoSeleccionado] = useState<string | null>(null)
   const [diasHistorial, setDiasHistorial] = useState<15 | 30>(15)
@@ -99,9 +116,65 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
     }
   }
 
-  const materiaPorNombre = new Map(materias.map((m) => [m.tanque ?? m.nombre, m]))
+  const materiaPorNombre = new Map(materiasActuales.map((m) => [m.tanque ?? m.nombre, m]))
   const materiaSeleccionada = tanqueSeleccionado ? materiaPorNombre.get(tanqueSeleccionado) : null
   const materiaGrafico = graficoSeleccionado ? materiaPorNombre.get(graficoSeleccionado) : null
+  const catalogoTanques: TanqueCatalogo[] = materiasActuales.map((materia) => ({
+    id: materia.id,
+    nombre: materia.nombre,
+    cantidad: materia.cantidad,
+    unidad: materia.unidad,
+    actualizado_en: materia.actualizado_en,
+    capacidad_maxima: materia.capacidadMaxima,
+  }))
+
+  function agregarTanque(tanque: TanqueCatalogo) {
+    const materia: Materia = {
+      ...tanque,
+      tanque: tanque.nombre,
+      capacidadMaxima: tanque.capacidad_maxima,
+    }
+    setMateriasActuales((actuales) => [...actuales, materia].sort((a, b) => a.nombre.localeCompare(b.nombre)))
+    setResumenActual((actuales) =>
+      [...actuales, crearResumenTanque(materia)].sort((a, b) => a.porcentaje - b.porcentaje),
+    )
+  }
+
+  function actualizarTanqueCatalogo(tanque: TanqueCatalogo) {
+    const materiaAnterior = materiasActuales.find((materia) => materia.id === tanque.id)
+    const materia: Materia = {
+      ...tanque,
+      tanque: tanque.nombre,
+      capacidadMaxima: tanque.capacidad_maxima,
+    }
+    setMateriasActuales((actuales) =>
+      actuales.map((actual) => (actual.id === tanque.id ? materia : actual)),
+    )
+    setResumenActual((actuales) =>
+      actuales
+        .map((actual) => (actual.id === tanque.id ? crearResumenTanque(materia) : actual))
+        .sort((a, b) => a.porcentaje - b.porcentaje),
+    )
+    if (materiaAnterior) {
+      const nombreAnterior = materiaAnterior.tanque ?? materiaAnterior.nombre
+      if (tanqueSeleccionado === nombreAnterior) setTanqueSeleccionado(tanque.nombre)
+      if (graficoSeleccionado === nombreAnterior) setGraficoSeleccionado(tanque.nombre)
+    }
+  }
+
+  function quitarTanque(id: string) {
+    const materia = materiasActuales.find((actual) => actual.id === id)
+    setMateriasActuales((actuales) => actuales.filter((actual) => actual.id !== id))
+    setResumenActual((actuales) => actuales.filter((actual) => actual.id !== id))
+    if (materia) {
+      const nombre = materia.tanque ?? materia.nombre
+      if (tanqueSeleccionado === nombre) setTanqueSeleccionado(null)
+      if (graficoSeleccionado === nombre) {
+        setGraficoSeleccionado(null)
+        setHistorialDatos([])
+      }
+    }
+  }
 
   useEffect(() => {
     if (graficoSeleccionado && materiaGrafico?.id) {
@@ -133,12 +206,23 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
 
       setHistorialDatos((datos) => datos.filter((dato) => dato.id !== medicionId))
 
-      if (resultado.latestDeleted && resultado.restoredCantidad !== undefined) {
+      if (
+        resultado.latestDeleted &&
+        resultado.restoredCantidad !== undefined &&
+        resultado.restoredUnidad !== undefined
+      ) {
         const porcentaje = Math.round(Math.max(0, Math.min(100, resultado.restoredCantidad)))
-        const nombreTanque = materiaGrafico.tanque ?? materiaGrafico.nombre
+        const materiaActualizada = {
+          ...materiaGrafico,
+          cantidad: porcentaje,
+          unidad: resultado.restoredUnidad,
+        }
+        setMateriasActuales((materias) =>
+          materias.map((materia) => (materia.id === materiaGrafico.id ? materiaActualizada : materia)),
+        )
         setResumenActual((resumen) =>
           resumen.map((tanque) =>
-            tanque.nombre === nombreTanque
+            tanque.id === materiaGrafico.id
               ? { ...tanque, porcentaje, estado: obtenerEstadoNivel(porcentaje) }
               : tanque,
           ).sort((a, b) => a.porcentaje - b.porcentaje),
@@ -175,19 +259,27 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
                     Ordenado de menor a mayor
                   </p>
                 </div>
-                <button
-                  onClick={compartirWhatsApp}
-                  disabled={isSharing}
-                  aria-label={isSharing ? "Generando resumen para compartir" : "Compartir resumen"}
-                  title={isSharing ? "Generando..." : "Compartir"}
-                  className="flex items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground transition-all hover:bg-muted/80 disabled:opacity-60"
-                >
-                  <Share2 className="h-3.5 w-3.5" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={compartirWhatsApp}
+                    disabled={isSharing}
+                    aria-label={isSharing ? "Generando resumen para compartir" : "Compartir resumen"}
+                    title={isSharing ? "Generando..." : "Compartir"}
+                    className="flex size-8 items-center justify-center rounded-md bg-muted text-muted-foreground transition-all hover:bg-muted/80 disabled:opacity-60"
+                  >
+                    <Share2 className="h-3.5 w-3.5" />
+                  </button>
+                  <CatalogoTanques
+                    tanques={catalogoTanques}
+                    onCrear={agregarTanque}
+                    onActualizar={actualizarTanqueCatalogo}
+                    onEliminar={quitarTanque}
+                  />
+                </div>
               </div>
               <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {resumenActual.map((tanque) => (
-                  <li key={tanque.nombre} className="rounded-lg border border-border bg-card">
+                  <li key={tanque.id} className="rounded-lg border border-border bg-card">
                     <button
                       onClick={() => setTanqueSeleccionado(tanque.nombre)}
                       className="w-full text-left p-3 focus:outline-none focus:ring-2 focus:ring-ring rounded-lg transition-all hover:bg-card/80"
@@ -286,9 +378,9 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
           </section>
         )}
 
-        {!tanqueSeleccionado && !graficoSeleccionado && !error && materias.every((m) => !m.id) && (
+        {!tanqueSeleccionado && !graficoSeleccionado && !error && materiasActuales.length === 0 && (
           <p className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning-foreground">
-            Ningún tanque coincide con los nombres esperados. Crea los registros en la tabla TAN_tanques_termo para habilitar el guardado.
+            No hay tanques registrados. Usa el botón del catálogo para agregar uno.
           </p>
         )}
       </main>
