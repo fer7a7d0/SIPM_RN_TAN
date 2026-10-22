@@ -2,8 +2,10 @@
 
 import { Materia } from "@/components/tarjeta-materia"
 import { Line, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts"
+import { Trash2 } from "lucide-react"
 
 type DatoHistorico = {
+  id: string
   fecha: string
   porcentaje: number
   nota?: string
@@ -14,9 +16,20 @@ type GraficoHistoricoProps = {
   datos: DatoHistorico[]
   dias: 15 | 30
   onCambiarDias: (dias: 15 | 30) => void
+  onEliminar: (id: string) => void
+  eliminandoId: string | null
+  errorEliminar: string | null
 }
 
-export function GraficoHistorico({ materia, datos, dias, onCambiarDias }: GraficoHistoricoProps) {
+export function GraficoHistorico({
+  materia,
+  datos,
+  dias,
+  onCambiarDias,
+  onEliminar,
+  eliminandoId,
+  errorEliminar,
+}: GraficoHistoricoProps) {
   const nombreTanque = materia.tanque ?? materia.nombre
 
   // Calcular estadísticas
@@ -122,8 +135,8 @@ export function GraficoHistorico({ materia, datos, dias, onCambiarDias }: Grafic
         <h2 className="mb-4 text-lg font-semibold tracking-tight text-card-foreground">Historial detallado</h2>
         <div className="flex flex-col gap-2">
             {datos.length > 0 ? (
-              datos.map((dato, idx) => (
-                <div key={idx} className="flex items-center justify-between gap-4 rounded-lg bg-background/60 p-3">
+              datos.map((dato) => (
+                <div key={dato.id} className="flex items-center justify-between gap-4 rounded-lg bg-background/60 p-3">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-card-foreground">{dato.fecha}</p>
                     {dato.nota && <p className="text-xs text-muted-foreground">{dato.nota}</p>}
@@ -131,12 +144,31 @@ export function GraficoHistorico({ materia, datos, dias, onCambiarDias }: Grafic
                   <div className="text-right">
                     <p className="text-sm font-bold text-card-foreground">{dato.porcentaje}%</p>
                   </div>
+                  <button
+                    type="button"
+                    aria-label={`Eliminar registro del ${dato.fecha}`}
+                    title="Eliminar registro"
+                    disabled={eliminandoId !== null}
+                    onClick={() => {
+                      if (window.confirm(`¿Deseas eliminar el registro del ${dato.fecha}?`)) {
+                        onEliminar(dato.id)
+                      }
+                    }}
+                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-md bg-transparent text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Trash2 aria-hidden="true" className="size-4" />
+                  </button>
                 </div>
               ))
             ) : (
               <p className="text-sm text-muted-foreground">Sin datos históricos disponibles</p>
             )}
         </div>
+        {errorEliminar && (
+          <p role="alert" className="mt-3 text-sm text-destructive">
+            {errorEliminar}
+          </p>
+        )}
       </section>
     </div>
   )

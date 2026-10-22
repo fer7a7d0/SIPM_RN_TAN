@@ -24,6 +24,10 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## Supabase
+
+Apply `supabase/migrations/20261022120000_allow_public_history_deletes.sql` to the Supabase project before using the history delete action. It grants the unauthenticated `anon` role permission to delete rows from `TAN_mediciones`; anyone who can reach the app can therefore delete history records.
+
 ## Learn More
 
 To learn more, take a look at the following resources:

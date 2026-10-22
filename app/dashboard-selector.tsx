@@ -6,7 +6,7 @@ import { GraficoHistorico } from "@/components/grafico-historico"
 import { Button } from "@/components/ui/button"
 import { LineChart, Share2 } from "lucide-react"
 import { toPng } from "html-to-image"
-import { obtenerHistorialTanque } from "@/app/actions"
+import { eliminarMedicionHistorial, obtenerHistorialTanque } from "@/app/actions"
 
 type ResumenTanque = {
   nombre: string
@@ -42,7 +42,9 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
   const [tanqueSeleccionado, setTanqueSeleccionado] = useState<string | null>(null)
   const [graficoSeleccionado, setGraficoSeleccionado] = useState<string | null>(null)
   const [diasHistorial, setDiasHistorial] = useState<15 | 30>(15)
-  const [historialDatos, setHistorialDatos] = useState<Array<{ fecha: string; porcentaje: number; nota?: string }>>([])
+  const [historialDatos, setHistorialDatos] = useState<Array<{ id: string; fecha: string; porcentaje: number; nota?: string }>>([])
+  const [eliminandoId, setEliminandoId] = useState<string | null>(null)
+  const [errorEliminar, setErrorEliminar] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [isSharing, setIsSharing] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
@@ -90,6 +92,28 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
       }
     }
   }, [graficoSeleccionado, materiaGrafico, diasHistorial])
+
+  async function eliminarRegistroHistorial(medicionId: string) {
+    if (!materiaGrafico || eliminandoId) return
+
+    setEliminandoId(medicionId)
+    setErrorEliminar(null)
+
+    try {
+      const resultado = await eliminarMedicionHistorial(materiaGrafico.id, medicionId)
+      if (!resultado.ok) {
+        setErrorEliminar(resultado.error ?? "No se pudo eliminar el registro del historial.")
+        return
+      }
+
+      setHistorialDatos((datos) => datos.filter((dato) => dato.id !== medicionId))
+    } catch (error) {
+      console.error("Error eliminando registro del historial:", error)
+      setErrorEliminar("Ocurrió un error al eliminar el registro. Intenta de nuevo.")
+    } finally {
+      setEliminandoId(null)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
@@ -200,6 +224,9 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
                 datos={historialDatos}
                 dias={diasHistorial}
                 onCambiarDias={setDiasHistorial}
+                onEliminar={eliminarRegistroHistorial}
+                eliminandoId={eliminandoId}
+                errorEliminar={errorEliminar}
               />
             )}
           </section>

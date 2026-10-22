@@ -94,7 +94,7 @@ export async function obtenerHistorialTanque(materiaId: string, dias: 15 | 30 = 
 
   const { data, error } = await supabase
     .from("TAN_mediciones")
-    .select("cantidad_nueva, nota, creado_en")
+    .select("id, cantidad_nueva, nota, creado_en")
     .eq("materia_prima_id", materiaId)
     .gte("creado_en", fechaInicio.toISOString())
     .order("creado_en", { ascending: false })
@@ -108,6 +108,7 @@ export async function obtenerHistorialTanque(materiaId: string, dias: 15 | 30 = 
 
   return (
     data?.map((item) => ({
+      id: String(item.id),
       fecha: new Date(item.creado_en).toLocaleDateString("es-ES", {
         timeZone: "America/Mexico_City",
         year: "numeric",
@@ -120,4 +121,31 @@ export async function obtenerHistorialTanque(materiaId: string, dias: 15 | 30 = 
       nota: item.nota || undefined,
     })) || []
   )
+}
+
+export async function eliminarMedicionHistorial(materiaId: string, medicionId: string): Promise<ActionResult> {
+  if (!materiaId.trim() || !medicionId.trim()) {
+    return { ok: false, error: "No se pudo identificar el registro que deseas eliminar." }
+  }
+
+  const supabase = await createClient()
+  const { count, error } = await supabase
+    .from("TAN_mediciones")
+    .delete({ count: "exact" })
+    .eq("id", medicionId)
+    .eq("materia_prima_id", materiaId)
+
+  if (error) {
+    console.error("Error eliminando medición del historial:", error)
+    return { ok: false, error: "No se pudo eliminar el registro del historial." }
+  }
+
+  if (count !== 1) {
+    return {
+      ok: false,
+      error: "No se eliminó el registro. Verifica que la política de borrado público esté aplicada en Supabase.",
+    }
+  }
+
+  return { ok: true }
 }
