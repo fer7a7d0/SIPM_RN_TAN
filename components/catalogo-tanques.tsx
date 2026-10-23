@@ -178,21 +178,36 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
                   />
                 </label>
                 <label className="flex flex-col gap-1 text-sm">
-                  <span className="font-medium">Rango máximo de lectura</span>
-                  <FormattedNumberInput
-                    name="capacidad_maxima"
-                    min={0.01}
-                    defaultValue={tanqueEditando?.capacidad_maxima ?? ""}
-                    required
-                    className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </label>
-                <label className="flex flex-col gap-1 text-sm">
                   <span className="font-medium">Capacidad máxima de gas</span>
                   <FormattedNumberInput
                     name="capacidad_gas"
                     min={0.01}
                     defaultValue={tanqueEditando?.capacidad_gas ?? ""}
+                    required
+                    className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="font-medium">Unidad de capacidad del gas</span>
+                  <select
+                    value={unidadCapacidadGas}
+                    onChange={(event) => setUnidadCapacidadGas(event.target.value)}
+                    required
+                    className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {UNIDADES_CAPACIDAD_GAS.map((opcion) => (
+                      <option key={opcion} value={opcion}>
+                        {opcion}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="font-medium">Rango máximo de lectura</span>
+                  <FormattedNumberInput
+                    name="capacidad_maxima"
+                    min={0.01}
+                    defaultValue={tanqueEditando?.capacidad_maxima ?? ""}
                     required
                     className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
                   />
@@ -209,21 +224,6 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
                       <option value={unidad}>Actual: {unidad}</option>
                     )}
                     {UNIDADES_LECTURA.map((opcion) => (
-                      <option key={opcion} value={opcion}>
-                        {opcion}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="flex flex-col gap-1 text-sm">
-                  <span className="font-medium">Unidad de capacidad del gas</span>
-                  <select
-                    value={unidadCapacidadGas}
-                    onChange={(event) => setUnidadCapacidadGas(event.target.value)}
-                    required
-                    className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    {UNIDADES_CAPACIDAD_GAS.map((opcion) => (
                       <option key={opcion} value={opcion}>
                         {opcion}
                       </option>
