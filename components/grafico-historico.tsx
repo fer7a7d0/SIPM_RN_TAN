@@ -2,7 +2,7 @@
 
 import { Materia } from "@/components/tarjeta-materia"
 import { Line, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts"
-import { Trash2 } from "lucide-react"
+import { LoaderCircle, Trash2 } from "lucide-react"
 import { formatNumber } from "@/lib/format-number"
 
 type DatoHistorico = {
@@ -85,9 +85,7 @@ export function GraficoHistorico({
       <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold tracking-tight text-card-foreground">Comportamiento histórico</h2>
-          <div className="flex items-center gap-3">
-            {cargando && <span className="text-xs text-muted-foreground">Actualizando historial...</span>}
-            <div className="flex gap-2" aria-label="Periodo del historial">
+          <div className="flex gap-2" aria-label="Periodo del historial" aria-busy={cargando}>
               {([15, 30] as const).map((opcion) => (
                 <button
                   key={opcion}
@@ -101,9 +99,16 @@ export function GraficoHistorico({
                   }`}
                 >
                   {formatNumber(opcion)} días
+                  <span className="inline-flex size-3 items-center justify-center">
+                    {cargando && dias === opcion && (
+                      <LoaderCircle aria-hidden="true" className="size-3 animate-spin" />
+                    )}
+                  </span>
+                  <span className="sr-only" aria-live="polite">
+                    {cargando && dias === opcion ? "Actualizando historial" : ""}
+                  </span>
                 </button>
               ))}
-            </div>
           </div>
         </div>
         {errorHistorial && (
