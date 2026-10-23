@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { formatNumber, parseFormattedNumber } from "@/lib/format-number"
-import { UNIDADES_CAPACIDAD_GAS } from "@/lib/unidades-tanques"
+import { type TipoUnidadTanque, type UnidadTanque } from "@/lib/unidades-tanques"
 import { revalidatePath } from "next/cache"
 
 export type ActionResult = {
@@ -56,20 +56,69 @@ function validarDatosTanque(
   if (!Number.isFinite(capacidadGas) || capacidadGas <= 0) {
     return { ok: false, error: "La capacidad máxima de gas debe ser mayor que cero." }
   }
-  if (!unidad || unidad.length > 20) {
+  if (!unidad) {
     return { ok: false, error: "La unidad de lectura es obligatoria." }
   }
   if (unidad.length > 20) {
     return { ok: false, error: "La unidad de lectura no puede exceder 20 caracteres." }
   }
-  if (!(UNIDADES_CAPACIDAD_GAS as readonly string[]).includes(unidadCapacidadGas)) {
-    return { ok: false, error: "Selecciona kg o m³ como unidad de capacidad del gas." }
+  if (!unidadCapacidadGas || unidadCapacidadGas.length > 30) {
+    return { ok: false, error: "La unidad de capacidad del gas es obligatoria y no puede exceder 30 caracteres." }
   }
 
   return {
     ok: true,
     datos: { nombre, unidad, capacidadMaxima, capacidadGas, unidadCapacidadGas },
   }
+}
+
+export async function obtenerUnidadesTanque(): Promise<
+  { ok: true; unidades: UnidadTanque[] } | { ok: false; error: string }
+> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("TAN_unidades")
+    .select("id, tipo, nombre")
+    .order("tipo")
+    .order("nombre")
+
+  if (error) {
+    console.error("Error obteniendo unidades de tanque:", error)
+    return { ok: false, error: "No se pudieron cargar las unidades." }
+  }
+
+  return { ok: true, unidades: data as UnidadTanque[] }
+}
+
+export async function crearUnidadTanque(
+  tipo: TipoUnidadTanque,
+  nombre: string,
+): Promise<{ ok: true; unidad: UnidadTanque } | { ok: false; error: string }> {
+  const nombreNormalizado = nombre.trim()
+  if (!["lectura", "capacidad_gas"].includes(tipo)) {
+    return { ok: false, error: "El tipo de unidad no es válido." }
+  }
+  if (!nombreNormalizado || nombreNormalizado.length > 30) {
+    return { ok: false, error: "La unidad es obligatoria y no puede exceder 30 caracteres." }
+  }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("TAN_unidades")
+    .insert({ tipo, nombre: nombreNormalizado })
+    .select("id, tipo, nombre")
+    .single()
+
+  if (error?.code === "23505") {
+    return { ok: false, error: "Ya existe una unidad con ese nombre para esta categoría." }
+  }
+
+  if (error || !data) {
+    console.error("Error creando unidad de tanque:", error)
+    return { ok: false, error: "No se pudo guardar la unidad." }
+  }
+
+  return { ok: true, unidad: data as UnidadTanque }
 }
 
 function normalizarTanque(tanque: {

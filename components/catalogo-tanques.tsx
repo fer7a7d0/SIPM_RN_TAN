@@ -1,10 +1,17 @@
 "use client"
 
-import { useState } from "react"
-import { actualizarTanque, crearTanque, eliminarTanque, type TanqueCatalogo } from "@/app/actions"
+import { useEffect, useState } from "react"
+import {
+  actualizarTanque,
+  crearTanque,
+  crearUnidadTanque,
+  eliminarTanque,
+  obtenerUnidadesTanque,
+  type TanqueCatalogo,
+} from "@/app/actions"
 import { Button } from "@/components/ui/button"
 import { Pencil, Plus, Trash2 } from "lucide-react"
-import { UNIDADES_CAPACIDAD_GAS, UNIDADES_LECTURA } from "@/lib/unidades-tanques"
+import { UNIDADES_CAPACIDAD_GAS, UNIDADES_LECTURA, type TipoUnidadTanque } from "@/lib/unidades-tanques"
 import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { formatNumber } from "@/lib/format-number"
 
@@ -20,13 +27,53 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
   const [agregando, setAgregando] = useState(false)
   const [unidad, setUnidad] = useState<string>(UNIDADES_LECTURA[0])
   const [unidadCapacidadGas, setUnidadCapacidadGas] = useState<string>(UNIDADES_CAPACIDAD_GAS[1])
+  const [unidadesLectura, setUnidadesLectura] = useState<string[]>([...UNIDADES_LECTURA])
+  const [unidadesCapacidadGas, setUnidadesCapacidadGas] = useState<string[]>([...UNIDADES_CAPACIDAD_GAS])
+  const [agregandoUnidad, setAgregandoUnidad] = useState<TipoUnidadTanque | null>(null)
+  const [nuevaUnidad, setNuevaUnidad] = useState("")
   const [pendiente, setPendiente] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let activo = true
+
+    async function cargarUnidades() {
+      const resultado = await obtenerUnidadesTanque()
+      if (!activo) return
+      if (!resultado.ok) {
+        setError(resultado.error)
+        return
+      }
+
+      setUnidadesLectura((actuales) => [
+        ...new Set([
+          ...actuales,
+          ...resultado.unidades.filter((item) => item.tipo === "lectura").map((item) => item.nombre),
+        ]),
+      ])
+      setUnidadesCapacidadGas((actuales) => [
+        ...new Set([
+          ...actuales,
+          ...resultado.unidades.filter((item) => item.tipo === "capacidad_gas").map((item) => item.nombre),
+        ]),
+      ])
+    }
+
+    void cargarUnidades().catch((loadError) => {
+      console.error("Error cargando unidades de tanque:", loadError)
+      if (activo) setError("Ocurrió un error al cargar las unidades.")
+    })
+    return () => {
+      activo = false
+    }
+  }, [])
 
   function abrirNuevo() {
     setTanqueEditando(null)
     setUnidad(UNIDADES_LECTURA[0])
     setUnidadCapacidadGas(UNIDADES_CAPACIDAD_GAS[1])
+    setAgregandoUnidad(null)
+    setNuevaUnidad("")
     setError(null)
     setAgregando(true)
   }
@@ -35,6 +82,8 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
     setTanqueEditando(tanque)
     setUnidad(tanque.unidad)
     setUnidadCapacidadGas(tanque.unidad_capacidad_gas ?? UNIDADES_CAPACIDAD_GAS[1])
+    setAgregandoUnidad(null)
+    setNuevaUnidad("")
     setError(null)
     setAgregando(false)
   }
@@ -42,7 +91,102 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
   function cerrarFormulario() {
     setTanqueEditando(null)
     setAgregando(false)
+    setAgregandoUnidad(null)
+    setNuevaUnidad("")
     setError(null)
+  }
+
+  function cambiarUnidad(tipo: TipoUnidadTanque, valor: string) {
+    if (valor === "__agregar_unidad__") {
+      setAgregandoUnidad(tipo)
+      setNuevaUnidad("")
+      setError(null)
+      return
+    }
+
+    if (tipo === "lectura") setUnidad(valor)
+    else setUnidadCapacidadGas(valor)
+    setAgregandoUnidad(null)
+    setNuevaUnidad("")
+  }
+
+  async function guardarUnidad(tipo: TipoUnidadTanque) {
+    setPendiente(true)
+    setError(null)
+    try {
+      const resultado = await crearUnidadTanque(tipo, nuevaUnidad)
+      if (!resultado.ok) {
+        setError(resultado.error)
+        return
+      }
+
+      const setter = tipo === "lectura" ? setUnidadesLectura : setUnidadesCapacidadGas
+      setter((actuales) => [...new Set([...actuales, resultado.unidad.nombre])])
+      if (tipo === "lectura") setUnidad(resultado.unidad.nombre)
+      else setUnidadCapacidadGas(resultado.unidad.nombre)
+      setAgregandoUnidad(null)
+      setNuevaUnidad("")
+    } catch (unitError) {
+      console.error("Error guardando unidad de tanque:", unitError)
+      setError("Ocurrió un error al guardar la unidad. Intenta de nuevo.")
+    } finally {
+      setPendiente(false)
+    }
+  }
+
+  function selectorUnidad(tipo: TipoUnidadTanque, label: string, valor: string, opciones: string[]) {
+    const idUnidad = `unidad-${tipo}`
+    const idNuevaUnidad = `nueva-unidad-${tipo}`
+    return (
+      <div className="flex flex-col gap-1 text-sm">
+        <label htmlFor={idUnidad} className="font-medium">{label}</label>
+        <select
+          id={idUnidad}
+          value={valor}
+          onChange={(event) => cambiarUnidad(tipo, event.target.value)}
+          required
+          disabled={pendiente}
+          className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
+        >
+          {valor && !opciones.includes(valor) && <option value={valor}>Actual: {valor}</option>}
+          {opciones.map((opcion) => (
+            <option key={opcion} value={opcion}>
+              {opcion}
+            </option>
+          ))}
+          <option value="__agregar_unidad__">+ Agregar unidad…</option>
+        </select>
+        {agregandoUnidad === tipo && (
+          <div className="mt-1 flex gap-2">
+            <label htmlFor={idNuevaUnidad} className="sr-only">Nueva unidad</label>
+            <input
+              id={idNuevaUnidad}
+              value={nuevaUnidad}
+              onChange={(event) => setNuevaUnidad(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault()
+                  void guardarUnidad(tipo)
+                }
+              }}
+              maxLength={tipo === "lectura" ? 20 : 30}
+              placeholder="Escribe la unidad"
+              autoFocus
+              disabled={pendiente}
+              className="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pendiente || !nuevaUnidad.trim()}
+              onClick={() => void guardarUnidad(tipo)}
+            >
+              Agregar
+            </Button>
+          </div>
+        )}
+      </div>
+    )
   }
 
   async function guardarTanque(event: React.FormEvent<HTMLFormElement>) {
@@ -151,21 +295,7 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
                     className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
                   />
                 </label>
-                <label className="flex flex-col gap-1 text-sm">
-                  <span className="font-medium">Unidad de capacidad del gas</span>
-                  <select
-                    value={unidadCapacidadGas}
-                    onChange={(event) => setUnidadCapacidadGas(event.target.value)}
-                    required
-                    className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    {UNIDADES_CAPACIDAD_GAS.map((opcion) => (
-                      <option key={opcion} value={opcion}>
-                        {opcion}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                {selectorUnidad("capacidad_gas", "Unidad de capacidad del gas", unidadCapacidadGas, unidadesCapacidadGas)}
                 <label className="flex flex-col gap-1 text-sm">
                   <span className="font-medium">Rango máximo de lectura</span>
                   <FormattedNumberInput
@@ -176,24 +306,7 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
                     className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
                   />
                 </label>
-                <label className="flex flex-col gap-1 text-sm">
-                  <span className="font-medium">Unidad de lectura del instrumento</span>
-                  <select
-                    value={unidad}
-                    onChange={(event) => setUnidad(event.target.value)}
-                    required
-                    className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    {!UNIDADES_LECTURA.some((opcion) => opcion === unidad) && (
-                      <option value={unidad}>Actual: {unidad}</option>
-                    )}
-                    {UNIDADES_LECTURA.map((opcion) => (
-                      <option key={opcion} value={opcion}>
-                        {opcion}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                {selectorUnidad("lectura", "Unidad de lectura del instrumento", unidad, unidadesLectura)}
                 {!tanqueEditando && (
                   <p className="sm:col-span-2 text-xs text-muted-foreground">
                     El tanque se creará sin mediciones, con un nivel inicial de 0%.
