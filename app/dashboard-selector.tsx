@@ -145,6 +145,7 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
     capacidad_gas: materia.capacidadGas,
     unidad_capacidad_gas: materia.unidadCapacidadGas,
     tiene_medicion: materia.tieneMedicion,
+    activa: materia.activa,
   }))
 
   function agregarTanque(tanque: TanqueCatalogo) {
@@ -155,11 +156,14 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
       capacidadGas: tanque.capacidad_gas,
       unidadCapacidadGas: tanque.unidad_capacidad_gas,
       tieneMedicion: tanque.tiene_medicion,
+      activa: tanque.activa,
     }
     setMateriasActuales((actuales) => [...actuales, materia].sort((a, b) => a.nombre.localeCompare(b.nombre)))
-    setResumenActual((actuales) =>
-      [...actuales, crearResumenTanque(materia)].sort((a, b) => a.porcentaje - b.porcentaje),
-    )
+    if (materia.activa) {
+      setResumenActual((actuales) =>
+        [...actuales, crearResumenTanque(materia)].sort((a, b) => a.porcentaje - b.porcentaje),
+      )
+    }
   }
 
   function actualizarTanqueCatalogo(tanque: TanqueCatalogo) {
@@ -171,15 +175,16 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
       capacidadGas: tanque.capacidad_gas,
       unidadCapacidadGas: tanque.unidad_capacidad_gas,
       tieneMedicion: tanque.tiene_medicion,
+      activa: tanque.activa,
     }
     setMateriasActuales((actuales) =>
       actuales.map((actual) => (actual.id === tanque.id ? materia : actual)),
     )
-    setResumenActual((actuales) =>
-      actuales
-        .map((actual) => (actual.id === tanque.id ? crearResumenTanque(materia) : actual))
-        .sort((a, b) => a.porcentaje - b.porcentaje),
-    )
+    setResumenActual((actuales) => {
+      const sinTanque = actuales.filter((actual) => actual.id !== tanque.id)
+      return (materia.activa ? [...sinTanque, crearResumenTanque(materia)] : sinTanque)
+        .sort((a, b) => a.porcentaje - b.porcentaje)
+    })
     if (materiaAnterior) {
       const nombreAnterior = materiaAnterior.tanque ?? materiaAnterior.nombre
       if (tanqueSeleccionado === nombreAnterior) setTanqueSeleccionado(tanque.nombre)
@@ -199,6 +204,34 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
         setHistorialDatos([])
       }
     }
+  }
+
+  function archivarTanque(id: string) {
+    const materia = materiasActuales.find((actual) => actual.id === id)
+    if (!materia) return
+
+    setMateriasActuales((actuales) =>
+      actuales.map((actual) => (actual.id === id ? { ...actual, activa: false } : actual)),
+    )
+    setResumenActual((actuales) => actuales.filter((actual) => actual.id !== id))
+    const nombre = materia.tanque ?? materia.nombre
+    if (tanqueSeleccionado === nombre) setTanqueSeleccionado(null)
+    if (graficoSeleccionado === nombre) {
+      setGraficoSeleccionado(null)
+      setHistorialDatos([])
+    }
+  }
+
+  function restaurarTanque(id: string) {
+    const materia = materiasActuales.find((actual) => actual.id === id)
+    if (!materia) return
+    const materiaActiva = { ...materia, activa: true }
+    setMateriasActuales((actuales) =>
+      actuales.map((actual) => (actual.id === id ? materiaActiva : actual)),
+    )
+    setResumenActual((actuales) =>
+      [...actuales, crearResumenTanque(materiaActiva)].sort((a, b) => a.porcentaje - b.porcentaje),
+    )
   }
 
   function actualizarNivelResumen(actualizacion: {
@@ -453,6 +486,8 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
               onCrear={agregarTanque}
               onActualizar={actualizarTanqueCatalogo}
               onEliminar={quitarTanque}
+              onArchivar={archivarTanque}
+              onReactivar={restaurarTanque}
             />
           </section>
         )}
@@ -477,9 +512,9 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
           </section>
         )}
 
-        {!catalogoAbierto && !tanqueSeleccionado && !graficoSeleccionado && !error && materiasActuales.length === 0 && (
+        {!catalogoAbierto && !tanqueSeleccionado && !graficoSeleccionado && !error && resumenActual.length === 0 && (
           <p className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning-foreground">
-            No hay tanques registrados. Usa el botón del catálogo para agregar uno.
+            No hay pipas activas. Usa el catálogo para agregar o reactivar una pipa.
           </p>
         )}
       </main>

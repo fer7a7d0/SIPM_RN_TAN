@@ -7,10 +7,11 @@ import {
   crearUnidadTanque,
   eliminarTanque,
   obtenerUnidadesTanque,
+  reactivarTanque,
   type TanqueCatalogo,
 } from "@/app/actions"
 import { Button } from "@/components/ui/button"
-import { Pencil, Plus, Trash2 } from "lucide-react"
+import { Pencil, Plus, RotateCcw, Trash2 } from "lucide-react"
 import { UNIDADES_CAPACIDAD_GAS, UNIDADES_LECTURA, type TipoUnidadTanque } from "@/lib/unidades-tanques"
 import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { formatNumber } from "@/lib/format-number"
@@ -20,9 +21,18 @@ type CatalogoTanquesProps = {
   onCrear: (tanque: TanqueCatalogo) => void
   onActualizar: (tanque: TanqueCatalogo) => void
   onEliminar: (id: string) => void
+  onArchivar: (id: string) => void
+  onReactivar: (id: string) => void
 }
 
-export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: CatalogoTanquesProps) {
+export function CatalogoTanques({
+  tanques,
+  onCrear,
+  onActualizar,
+  onEliminar,
+  onArchivar,
+  onReactivar,
+}: CatalogoTanquesProps) {
   const [tanqueEditando, setTanqueEditando] = useState<TanqueCatalogo | null>(null)
   const [agregando, setAgregando] = useState(false)
   const [unidad, setUnidad] = useState<string>(UNIDADES_LECTURA[0])
@@ -226,7 +236,11 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
   }
 
   async function borrarTanque(tanque: TanqueCatalogo) {
-    if (!window.confirm(`¿Deseas eliminar el tanque "${tanque.nombre}"?`)) return
+    if (
+      !window.confirm(
+        `¿Deseas eliminar la pipa "${tanque.nombre}"? Si tiene registros, se conservará inactiva en el catálogo y se ocultará del resumen. Si no tiene registros, se eliminará definitivamente.`,
+      )
+    ) return
 
     setPendiente(true)
     setError(null)
@@ -236,10 +250,29 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
         setError(resultado.error ?? "No se pudo eliminar el tanque.")
         return
       }
-      onEliminar(tanque.id)
+      if (resultado.archived) onArchivar(tanque.id)
+      else onEliminar(tanque.id)
     } catch (deleteError) {
       console.error("Error eliminando tanque del catálogo:", deleteError)
       setError("Ocurrió un error al eliminar el tanque. Intenta de nuevo.")
+    } finally {
+      setPendiente(false)
+    }
+  }
+
+  async function restaurarTanque(tanque: TanqueCatalogo) {
+    setPendiente(true)
+    setError(null)
+    try {
+      const resultado = await reactivarTanque(tanque.id)
+      if (!resultado.ok) {
+        setError(resultado.error ?? "No se pudo reactivar el tanque.")
+        return
+      }
+      onReactivar(tanque.id)
+    } catch (restoreError) {
+      console.error("Error reactivando tanque del catálogo:", restoreError)
+      setError("Ocurrió un error al reactivar el tanque. Intenta de nuevo.")
     } finally {
       setPendiente(false)
     }
@@ -259,13 +292,13 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
               <div className="mb-4 flex justify-end">
                 <Button
                   type="button"
-                  size="icon-sm"
                   aria-label="Agregar tanque"
                   title="Agregar tanque"
                   disabled={pendiente}
                   onClick={abrirNuevo}
+                  className="flex size-8 items-center justify-center rounded-md bg-muted text-muted-foreground transition-all hover:bg-muted/80 disabled:opacity-60"
                 >
-                  <Plus aria-hidden="true" />
+                  <Plus aria-hidden="true" className="h-3.5 w-3.5" />
                 </Button>
               </div>
             )}
@@ -342,7 +375,10 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
                     className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background/60 p-3"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{tanque.nombre}</p>
+                      <p className="truncate text-sm font-semibold">
+                        {tanque.nombre}
+                        {!tanque.activa && <span className="ml-2 text-xs font-normal text-muted-foreground">Inactiva</span>}
+                      </p>
                       <p className="text-xs text-muted-foreground">
                         Rango de lectura: 0 - {formatNumber(tanque.capacidad_maxima)} {tanque.unidad}
                       </p>
@@ -363,16 +399,31 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
                       >
                         <Pencil aria-hidden="true" />
                       </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={`Eliminar ${tanque.nombre}`}
-                        disabled={pendiente || agregando || tanqueEditando !== null}
-                        onClick={() => borrarTanque(tanque)}
-                      >
-                        <Trash2 aria-hidden="true" className="text-destructive" />
-                      </Button>
+                      {tanque.activa ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Eliminar ${tanque.nombre}`}
+                          title={`Eliminar ${tanque.nombre}`}
+                          disabled={pendiente || agregando || tanqueEditando !== null}
+                          onClick={() => borrarTanque(tanque)}
+                        >
+                          <Trash2 aria-hidden="true" className="text-destructive" />
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Reactivar ${tanque.nombre}`}
+                          title={`Reactivar ${tanque.nombre}`}
+                          disabled={pendiente || agregando || tanqueEditando !== null}
+                          onClick={() => void restaurarTanque(tanque)}
+                        >
+                          <RotateCcw aria-hidden="true" className="text-primary" />
+                        </Button>
+                      )}
                     </div>
                   </li>
                 ))}

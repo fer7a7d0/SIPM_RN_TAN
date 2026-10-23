@@ -11,6 +11,7 @@ export type ActionResult = {
   latestDeleted?: boolean
   restoredCantidad?: number
   tieneMedicion?: boolean
+  archived?: boolean
 }
 
 export type ResultadoActualizarNivel =
@@ -27,6 +28,7 @@ export type TanqueCatalogo = {
   capacidad_gas: number | null
   unidad_capacidad_gas: string | null
   tiene_medicion: boolean
+  activa: boolean
 }
 
 type ResultadoTanque = { ok: true; tanque: TanqueCatalogo } | { ok: false; error: string }
@@ -131,6 +133,7 @@ function normalizarTanque(tanque: {
   capacidad_gas: number | string | null
   unidad_capacidad_gas: string | null
   tiene_medicion: boolean
+  activa: boolean
 }): TanqueCatalogo {
   return {
     ...tanque,
@@ -156,7 +159,7 @@ export async function crearTanque(formData: FormData): Promise<ResultadoTanque> 
       unidad: valores.datos.unidad,
       actualizado_en: new Date().toISOString(),
     })
-    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima, capacidad_gas, unidad_capacidad_gas, tiene_medicion")
+    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima, capacidad_gas, unidad_capacidad_gas, tiene_medicion, activa")
     .single()
 
   if (error) {
@@ -189,7 +192,7 @@ export async function actualizarTanque(formData: FormData): Promise<ResultadoTan
       actualizado_en: new Date().toISOString(),
     })
     .eq("id", id)
-    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima, capacidad_gas, unidad_capacidad_gas, tiene_medicion")
+    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima, capacidad_gas, unidad_capacidad_gas, tiene_medicion, activa")
     .maybeSingle()
 
   if (error) {
@@ -218,6 +221,9 @@ export async function eliminarTanque(id: string): Promise<ActionResult> {
   }
 
   if (!data || typeof data !== "object" || data.deleted !== true) {
+    if (data && typeof data === "object" && data.archived === true) {
+      return { ok: true, archived: true }
+    }
     return {
       ok: false,
       error:
@@ -225,6 +231,26 @@ export async function eliminarTanque(id: string): Promise<ActionResult> {
           ? "No se puede eliminar este tanque porque tiene mediciones registradas."
           : "No se encontró el tanque solicitado.",
     }
+  }
+
+  return { ok: true }
+}
+
+export async function reactivarTanque(id: string): Promise<ActionResult> {
+  if (!id.trim()) return { ok: false, error: "No se pudo identificar el tanque." }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("reactivar_tanque_catalogo", {
+    p_tanque_id: id,
+  })
+
+  if (error) {
+    console.error("Error reactivando tanque termo:", error)
+    return { ok: false, error: "No se pudo reactivar el tanque." }
+  }
+
+  if (!data || typeof data !== "object" || data.reactivated !== true) {
+    return { ok: false, error: "No se encontró el tanque solicitado." }
   }
 
   return { ok: true }

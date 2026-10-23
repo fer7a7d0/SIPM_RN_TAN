@@ -44,7 +44,7 @@ export default async function Home() {
 
   const { data, error } = await supabase
     .from("TAN_tanques_termo")
-    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima, capacidad_gas, unidad_capacidad_gas, tiene_medicion")
+    .select("id, nombre, cantidad, unidad, actualizado_en, capacidad_maxima, capacidad_gas, unidad_capacidad_gas, tiene_medicion, activa")
     .order("nombre", { ascending: true })
 
   const materias: Materia[] = (data ?? []).map((tanque) => ({
@@ -58,9 +58,11 @@ export default async function Home() {
     capacidadGas: tanque.capacidad_gas === null ? null : Number(tanque.capacidad_gas),
     unidadCapacidadGas: tanque.unidad_capacidad_gas,
     tieneMedicion: tanque.tiene_medicion,
+    activa: tanque.activa,
   }))
 
   const resumenTanques = materias
+    .filter((materia) => materia.activa)
     .map((materia) => {
       const porcentaje = clampPorcentaje(Number(materia.cantidad))
       return {

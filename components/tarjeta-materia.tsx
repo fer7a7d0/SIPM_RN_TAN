@@ -17,6 +17,7 @@ export type Materia = {
   capacidadGas: number | null
   unidadCapacidadGas: string | null
   tieneMedicion: boolean
+  activa: boolean
 }
 
 function clampPorcentaje(valor: number) {
