@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { formatNumber, parseFormattedNumber } from "@/lib/format-number"
 import { UNIDADES_CAPACIDAD_GAS } from "@/lib/unidades-tanques"
 import { revalidatePath } from "next/cache"
 
@@ -9,7 +10,6 @@ export type ActionResult = {
   error?: string
   latestDeleted?: boolean
   restoredCantidad?: number
-  restoredUnidad?: string
   tieneMedicion?: boolean
 }
 
@@ -43,8 +43,8 @@ function validarDatosTanque(
 ): { ok: true; datos: DatosTanque } | { ok: false; error: string } {
   const nombre = String(formData.get("nombre") ?? "").trim()
   const unidad = String(formData.get("unidad") ?? "").trim()
-  const capacidadMaxima = Number(formData.get("capacidad_maxima"))
-  const capacidadGas = Number(formData.get("capacidad_gas"))
+  const capacidadMaxima = Number(parseFormattedNumber(String(formData.get("capacidad_maxima") ?? "")))
+  const capacidadGas = Number(parseFormattedNumber(String(formData.get("capacidad_gas") ?? "")))
   const unidadCapacidadGas = String(formData.get("unidad_capacidad_gas") ?? "").trim()
 
   if (!nombre || nombre.length > 100) {
@@ -188,7 +188,7 @@ export async function actualizarNivel(formData: FormData): Promise<ResultadoActu
 
   if (!id) return { ok: false, error: "Tanque no vinculado en base de datos. Crea ese registro para poder guardar nivel." }
 
-  const nivelMedido = Number(cantidadRaw)
+  const nivelMedido = Number(parseFormattedNumber(cantidadRaw))
   if (!Number.isFinite(nivelMedido) || nivelMedido < 0) {
     return { ok: false, error: "El nivel debe ser un valor igual o mayor que cero." }
   }
@@ -208,7 +208,7 @@ export async function actualizarNivel(formData: FormData): Promise<ResultadoActu
   if (nivelMedido > capacidadMaxima) {
     return {
       ok: false,
-      error: `El nivel debe ser un valor entre 0 y ${capacidadMaxima} ${actual.unidad} para ${actual.nombre}.`,
+      error: `El nivel debe ser un valor entre 0 y ${formatNumber(capacidadMaxima)} ${actual.unidad} para ${actual.nombre}.`,
     }
   }
 
@@ -226,7 +226,7 @@ export async function actualizarNivel(formData: FormData): Promise<ResultadoActu
     return { ok: false, error: "No se pudo actualizar el nivel." }
   }
 
-  const detalleNivel = `Lectura real: ${nivelMedido}/${capacidadMaxima} ${actual.unidad}`
+  const detalleNivel = `Lectura real: ${formatNumber(nivelMedido)}/${formatNumber(capacidadMaxima)} ${actual.unidad}`
   const notaCompleta = nota ? `${nota} | ${detalleNivel}` : detalleNivel
 
   // Registrar el movimiento en el historial
@@ -317,10 +317,9 @@ export async function eliminarMedicionHistorial(materiaId: string, medicionId: s
   const latestDeleted = data.latest_deleted === true
   const tieneMedicion = data.has_measurements === true
   const restoredCantidad = Number(data.restored_cantidad)
-  const restoredUnidad = typeof data.restored_unidad === "string" ? data.restored_unidad : ""
   if (
     latestDeleted &&
-    (!Number.isFinite(restoredCantidad) || !restoredUnidad || typeof data.has_measurements !== "boolean")
+    (!Number.isFinite(restoredCantidad) || typeof data.has_measurements !== "boolean")
   ) {
     console.error("La medición se eliminó pero la cantidad restaurada no es válida:", data)
     return { ok: false, error: "Se eliminó el registro, pero no se pudo actualizar el resumen." }
@@ -330,7 +329,6 @@ export async function eliminarMedicionHistorial(materiaId: string, medicionId: s
     ok: true,
     latestDeleted,
     restoredCantidad: latestDeleted ? restoredCantidad : undefined,
-    restoredUnidad: latestDeleted ? restoredUnidad : undefined,
     tieneMedicion: latestDeleted ? tieneMedicion : undefined,
   }
 }

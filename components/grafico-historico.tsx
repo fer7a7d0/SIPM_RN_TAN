@@ -3,6 +3,7 @@
 import { Materia } from "@/components/tarjeta-materia"
 import { Line, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts"
 import { Trash2 } from "lucide-react"
+import { formatNumber } from "@/lib/format-number"
 
 type DatoHistorico = {
   id: string
@@ -44,7 +45,7 @@ export function GraficoHistorico({
       <header className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <p className="text-xs font-semibold tracking-[0.24em] text-primary uppercase">Historial</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-card-foreground text-balance">
-          {nombreTanque} - Últimos {dias} días
+          {nombreTanque} - Últimos {formatNumber(dias)} días
         </h1>
         <p className="mt-2 max-w-3xl text-muted-foreground text-pretty">
           Comportamiento histórico y estadísticas del nivel
@@ -57,22 +58,22 @@ export function GraficoHistorico({
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div className="rounded-lg bg-background/60 p-4">
             <p className="text-sm font-medium text-muted-foreground">Promedio</p>
-            <p className="mt-2 text-2xl font-bold text-card-foreground">{promedio}%</p>
+            <p className="mt-2 text-2xl font-bold text-card-foreground">{formatNumber(promedio)}%</p>
           </div>
 
           <div className="rounded-lg bg-background/60 p-4">
             <p className="text-sm font-medium text-muted-foreground">Máximo</p>
-            <p className="mt-2 text-2xl font-bold text-success-foreground">{maximo}%</p>
+            <p className="mt-2 text-2xl font-bold text-success-foreground">{formatNumber(maximo)}%</p>
           </div>
 
           <div className="rounded-lg bg-background/60 p-4">
             <p className="text-sm font-medium text-muted-foreground">Mínimo</p>
-            <p className="mt-2 text-2xl font-bold text-destructive-foreground">{minimo}%</p>
+            <p className="mt-2 text-2xl font-bold text-destructive-foreground">{formatNumber(minimo)}%</p>
           </div>
 
           <div className="rounded-lg bg-background/60 p-4">
             <p className="text-sm font-medium text-muted-foreground">Críticos</p>
-            <p className="mt-2 text-2xl font-bold text-destructive-foreground">{criticos}x</p>
+            <p className="mt-2 text-2xl font-bold text-destructive-foreground">{formatNumber(criticos)}x</p>
           </div>
         </div>
       </section>
@@ -93,7 +94,7 @@ export function GraficoHistorico({
                     : "border-border bg-background text-foreground hover:bg-muted"
                 }`}
               >
-                {opcion} días
+                {formatNumber(opcion)} días
               </button>
             ))}
           </div>
@@ -110,9 +111,13 @@ export function GraficoHistorico({
                     tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                     tickMargin={8}
                     width={48}
+                    tickFormatter={formatNumber}
                   />
                   <Tooltip
-                    formatter={(value: number) => [`${value}%`, "Nivel"]}
+                    formatter={(value: unknown) => [
+                      `${typeof value === "number" ? formatNumber(value) : String(value ?? "")}%`,
+                      "Nivel",
+                    ]}
                     contentStyle={{
                       backgroundColor: "var(--popover)",
                       borderColor: "var(--border)",
@@ -142,7 +147,7 @@ export function GraficoHistorico({
                     {dato.nota && <p className="text-xs text-muted-foreground">{dato.nota}</p>}
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-card-foreground">{dato.porcentaje}%</p>
+                    <p className="text-sm font-bold text-card-foreground">{formatNumber(dato.porcentaje)}%</p>
                   </div>
                   <button
                     type="button"

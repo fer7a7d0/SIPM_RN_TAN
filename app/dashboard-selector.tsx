@@ -7,6 +7,7 @@ import { GraficoHistorico } from "@/components/grafico-historico"
 import { Button } from "@/components/ui/button"
 import { LineChart, Share2 } from "lucide-react"
 import { toPng } from "html-to-image"
+import { formatNumber } from "@/lib/format-number"
 import {
   eliminarMedicionHistorial,
   obtenerHistorialTanque,
@@ -36,7 +37,7 @@ function generarTextoResumen(resumenTanques: ResumenTanque[]) {
   const lineas = resumenTanques.map(
     (t) =>
       `${EMOJI_ESTADO[t.estado.texto] ?? "\u26AA"} ${t.nombre}: ${
-        t.tieneMedicion ? `${t.porcentaje}% (${t.estado.texto})` : "Sin registro"
+        t.tieneMedicion ? `${formatNumber(t.porcentaje)}% (${t.estado.texto})` : "Sin registro"
       }`,
   )
   return [`\u{1F4CA} Resumen de niveles - ${fecha}`, "", ...lineas].join("\n")
@@ -265,7 +266,6 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
       if (
         resultado.latestDeleted &&
         resultado.restoredCantidad !== undefined &&
-        resultado.restoredUnidad !== undefined &&
         resultado.tieneMedicion !== undefined
       ) {
         const tieneMedicion = resultado.tieneMedicion
@@ -273,7 +273,6 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
         const materiaActualizada = {
           ...materiaGrafico,
           cantidad: porcentaje,
-          unidad: resultado.restoredUnidad,
           tieneMedicion,
         }
         setMateriasActuales((materias) =>
@@ -352,7 +351,7 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
                         <p className="text-sm font-medium text-card-foreground">{tanque.nombre}</p>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-semibold tabular-nums text-card-foreground">
-                            {tanque.tieneMedicion ? `${tanque.porcentaje}%` : "Sin registro"}
+                            {tanque.tieneMedicion ? `${formatNumber(tanque.porcentaje)}%` : "Sin registro"}
                           </span>
                           <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${tanque.estado.colorChip}`}>
                             {tanque.estado.texto}

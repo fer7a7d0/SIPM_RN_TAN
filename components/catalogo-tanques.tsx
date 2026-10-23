@@ -5,6 +5,8 @@ import { actualizarTanque, crearTanque, eliminarTanque, type TanqueCatalogo } fr
 import { Button } from "@/components/ui/button"
 import { Pencil, Plus, Trash2, X } from "lucide-react"
 import { UNIDADES_CAPACIDAD_GAS, UNIDADES_LECTURA } from "@/lib/unidades-tanques"
+import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
+import { formatNumber } from "@/lib/format-number"
 
 type CatalogoTanquesProps = {
   tanques: TanqueCatalogo[]
@@ -174,11 +176,9 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
                 </label>
                 <label className="flex flex-col gap-1 text-sm">
                   <span className="font-medium">Rango máximo de lectura</span>
-                  <input
+                  <FormattedNumberInput
                     name="capacidad_maxima"
-                    type="number"
-                    min="0.01"
-                    step="any"
+                    min={0.01}
                     defaultValue={tanqueEditando?.capacidad_maxima ?? ""}
                     required
                     className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
@@ -186,11 +186,9 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
                 </label>
                 <label className="flex flex-col gap-1 text-sm">
                   <span className="font-medium">Capacidad máxima de gas</span>
-                  <input
+                  <FormattedNumberInput
                     name="capacidad_gas"
-                    type="number"
-                    min="0.01"
-                    step="any"
+                    min={0.01}
                     defaultValue={tanqueEditando?.capacidad_gas ?? ""}
                     required
                     className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
@@ -266,11 +264,12 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold">{tanque.nombre}</p>
                       <p className="text-xs text-muted-foreground">
-                        Rango máximo de lectura: {tanque.capacidad_maxima} {tanque.unidad} · Nivel actual:{" "}
-                        {tanque.tiene_medicion ? `${tanque.cantidad}%` : "Sin registro"}
+                        Rango máximo de lectura: {formatNumber(tanque.capacidad_maxima)} {tanque.unidad} · Nivel actual:{" "}
+                        {tanque.tiene_medicion ? `${formatNumber(tanque.cantidad)}%` : "Sin registro"}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Capacidad máxima de gas: {tanque.capacidad_gas ?? "Sin especificar"}{" "}
+                        Capacidad máxima de gas:{" "}
+                        {tanque.capacidad_gas === null ? "Sin especificar" : formatNumber(tanque.capacidad_gas)}{" "}
                         {tanque.unidad_capacidad_gas ?? ""}
                       </p>
                     </div>
