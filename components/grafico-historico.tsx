@@ -140,31 +140,58 @@ export function GraficoHistorico({
         <h2 className="mb-4 text-lg font-semibold tracking-tight text-card-foreground">Historial detallado</h2>
         <div className="flex flex-col gap-2">
             {datos.length > 0 ? (
-              datos.map((dato) => (
-                <div key={dato.id} className="flex items-center justify-between gap-4 rounded-lg bg-background/60 p-3">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-card-foreground">{dato.fecha}</p>
-                    {dato.nota && <p className="text-xs text-muted-foreground">{dato.nota}</p>}
+              datos.map((dato, index) => {
+                const lecturaPrevia = datos[index + 1]
+                const variacionGas =
+                  lecturaPrevia &&
+                  materia.capacidadGas !== null &&
+                  materia.capacidadGas > 0 &&
+                  materia.unidadCapacidadGas
+                    ? Math.round(
+                        (materia.capacidadGas * (dato.porcentaje - lecturaPrevia.porcentaje)) / 100,
+                      )
+                    : null
+
+                return (
+                  <div key={dato.id} className="flex items-center justify-between gap-4 rounded-lg bg-background/60 p-3">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-card-foreground">{dato.fecha}</p>
+                      {dato.nota && <p className="text-xs text-muted-foreground">{dato.nota}</p>}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-card-foreground">{formatNumber(dato.porcentaje)}%</p>
+                      {variacionGas !== null && (
+                        <p className="flex items-center justify-end gap-1 text-xs font-semibold text-muted-foreground">
+                          {variacionGas !== 0 && (
+                            <span
+                              aria-label={variacionGas > 0 ? "Aumento" : "Disminución"}
+                              className={variacionGas > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}
+                            >
+                              {variacionGas > 0 ? "↑" : "↓"}
+                            </span>
+                          )}
+                          {variacionGas > 0 ? "+" : ""}
+                          {formatNumber(variacionGas)} {materia.unidadCapacidadGas}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      aria-label={`Eliminar registro del ${dato.fecha}`}
+                      title="Eliminar registro"
+                      disabled={eliminandoId !== null}
+                      onClick={() => {
+                        if (window.confirm(`¿Deseas eliminar el registro del ${dato.fecha}?`)) {
+                          onEliminar(dato.id)
+                        }
+                      }}
+                      className="inline-flex size-9 shrink-0 items-center justify-center rounded-md bg-transparent text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Trash2 aria-hidden="true" className="size-4" />
+                    </button>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-card-foreground">{formatNumber(dato.porcentaje)}%</p>
-                  </div>
-                  <button
-                    type="button"
-                    aria-label={`Eliminar registro del ${dato.fecha}`}
-                    title="Eliminar registro"
-                    disabled={eliminandoId !== null}
-                    onClick={() => {
-                      if (window.confirm(`¿Deseas eliminar el registro del ${dato.fecha}?`)) {
-                        onEliminar(dato.id)
-                      }
-                    }}
-                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-md bg-transparent text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <Trash2 aria-hidden="true" className="size-4" />
-                  </button>
-                </div>
-              ))
+                )
+              })
             ) : (
               <p className="text-sm text-muted-foreground">Sin datos históricos disponibles</p>
             )}
