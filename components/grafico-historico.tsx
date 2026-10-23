@@ -16,6 +16,8 @@ type GraficoHistoricoProps = {
   materia: Materia
   datos: DatoHistorico[]
   dias: 15 | 30
+  cargando: boolean
+  errorHistorial: string | null
   onCambiarDias: (dias: 15 | 30) => void
   onEliminar: (id: string) => void
   eliminandoId: string | null
@@ -26,6 +28,8 @@ export function GraficoHistorico({
   materia,
   datos,
   dias,
+  cargando,
+  errorHistorial,
   onCambiarDias,
   onEliminar,
   eliminandoId,
@@ -81,24 +85,32 @@ export function GraficoHistorico({
       <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold tracking-tight text-card-foreground">Comportamiento histórico</h2>
-          <div className="flex gap-2" aria-label="Periodo del historial">
-            {([15, 30] as const).map((opcion) => (
-              <button
-                key={opcion}
-                type="button"
-                aria-pressed={dias === opcion}
-                onClick={() => onCambiarDias(opcion)}
-                className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                  dias === opcion
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-background text-foreground hover:bg-muted"
-                }`}
-              >
-                {formatNumber(opcion)} días
-              </button>
-            ))}
+          <div className="flex items-center gap-3">
+            {cargando && <span className="text-xs text-muted-foreground">Actualizando historial...</span>}
+            <div className="flex gap-2" aria-label="Periodo del historial">
+              {([15, 30] as const).map((opcion) => (
+                <button
+                  key={opcion}
+                  type="button"
+                  aria-pressed={dias === opcion}
+                  onClick={() => onCambiarDias(opcion)}
+                  className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    dias === opcion
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-background text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {formatNumber(opcion)} días
+                </button>
+              ))}
+            </div>
           </div>
         </div>
+        {errorHistorial && (
+          <p role="alert" className="mb-3 text-sm text-destructive">
+            {errorHistorial}
+          </p>
+        )}
           {datos.length > 0 ? (
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -131,7 +143,9 @@ export function GraficoHistorico({
             </div>
           ) : (
             <div className="flex h-64 items-center justify-center rounded-lg bg-background/60 text-muted-foreground">
-              <p className="text-sm">Sin datos históricos disponibles</p>
+              <p className="text-sm">
+                {cargando ? "Cargando historial..." : "Sin datos históricos disponibles"}
+              </p>
             </div>
           )}
       </section>
@@ -193,7 +207,9 @@ export function GraficoHistorico({
                 )
               })
             ) : (
-              <p className="text-sm text-muted-foreground">Sin datos históricos disponibles</p>
+              <p className="text-sm text-muted-foreground">
+                {cargando ? "Cargando historial..." : "Sin datos históricos disponibles"}
+              </p>
             )}
         </div>
         {errorEliminar && (

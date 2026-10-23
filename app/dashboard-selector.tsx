@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, useTransition } from "react"
+import { useEffect, useRef, useState } from "react"
 import { TarjetaMateria, type Materia } from "@/components/tarjeta-materia"
 import { CatalogoTanques } from "@/components/catalogo-tanques"
 import { GraficoHistorico } from "@/components/grafico-historico"
@@ -102,7 +102,8 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
   const [historialDatos, setHistorialDatos] = useState<Array<{ id: string; fecha: string; porcentaje: number; nota?: string }>>([])
   const [eliminandoId, setEliminandoId] = useState<string | null>(null)
   const [errorEliminar, setErrorEliminar] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
+  const [cargandoHistorial, setCargandoHistorial] = useState(false)
+  const [errorHistorial, setErrorHistorial] = useState<string | null>(null)
   const [isSharing, setIsSharing] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
 
@@ -234,20 +235,34 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
     )
   }
 
+  const materiaGraficoId = materiaGrafico?.id
+
   useEffect(() => {
-    if (graficoSeleccionado && materiaGrafico?.id) {
-      let activo = true
+    const idTanque = materiaGraficoId ?? ""
+    if (!idTanque) return
 
-      startTransition(async () => {
-        const datos = await obtenerHistorialTanque(materiaGrafico.id, diasHistorial)
+    let activo = true
+    setCargandoHistorial(true)
+    setErrorHistorial(null)
+
+    async function cargarHistorial() {
+      try {
+        const datos = await obtenerHistorialTanque(idTanque, diasHistorial)
         if (activo) setHistorialDatos(datos)
-      })
-
-      return () => {
-        activo = false
+      } catch (error) {
+        console.error("Error cargando historial:", error)
+        if (activo) setErrorHistorial("No se pudo actualizar el historial. Intenta de nuevo.")
+      } finally {
+        if (activo) setCargandoHistorial(false)
       }
     }
-  }, [graficoSeleccionado, materiaGrafico, diasHistorial])
+
+    void cargarHistorial()
+
+    return () => {
+      activo = false
+    }
+  }, [materiaGraficoId, diasHistorial])
 
   async function eliminarRegistroHistorial(medicionId: string) {
     if (!materiaGrafico || eliminandoId) return
@@ -410,21 +425,17 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
             >
               ← Volver al resumen
             </Button>
-            {isPending ? (
-              <div className="flex h-64 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                <p className="text-sm">Cargando historial...</p>
-              </div>
-            ) : (
-              <GraficoHistorico
-                materia={materiaGrafico}
-                datos={historialDatos}
-                dias={diasHistorial}
-                onCambiarDias={setDiasHistorial}
-                onEliminar={eliminarRegistroHistorial}
-                eliminandoId={eliminandoId}
-                errorEliminar={errorEliminar}
-              />
-            )}
+            <GraficoHistorico
+              materia={materiaGrafico}
+              datos={historialDatos}
+              dias={diasHistorial}
+              cargando={cargandoHistorial}
+              errorHistorial={errorHistorial}
+              onCambiarDias={setDiasHistorial}
+              onEliminar={eliminarRegistroHistorial}
+              eliminandoId={eliminandoId}
+              errorEliminar={errorEliminar}
+            />
           </section>
         )}
 
