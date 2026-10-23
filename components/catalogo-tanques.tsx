@@ -136,9 +136,6 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
                 <h2 id="catalogo-tanques-titulo" className="text-xl font-semibold">
                   Catálogo de tanques termo
                 </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Los cambios se reflejan en el resumen y en los formularios.
-                </p>
               </div>
               <Button
                 type="button"
@@ -153,9 +150,15 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
             </header>
 
             <div className="mb-4 flex justify-end">
-              <Button type="button" size="sm" disabled={pendiente || agregando || tanqueEditando !== null} onClick={abrirNuevo}>
-                <Plus data-icon="inline-start" />
-                Agregar tanque
+              <Button
+                type="button"
+                size="icon-sm"
+                aria-label="Agregar tanque"
+                title="Agregar tanque"
+                disabled={pendiente || agregando || tanqueEditando !== null}
+                onClick={abrirNuevo}
+              >
+                <Plus aria-hidden="true" />
               </Button>
             </div>
 
@@ -264,8 +267,7 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold">{tanque.nombre}</p>
                       <p className="text-xs text-muted-foreground">
-                        Rango máximo de lectura: {formatNumber(tanque.capacidad_maxima)} {tanque.unidad} · Nivel actual:{" "}
-                        {tanque.tiene_medicion ? `${formatNumber(tanque.cantidad)}%` : "Sin registro"}
+                        Rango de lectura: 0 - {formatNumber(tanque.capacidad_maxima)} {tanque.unidad}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Capacidad máxima de gas:{" "}
