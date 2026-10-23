@@ -128,9 +128,6 @@ export function TarjetaMateria({
           <p className="mt-1 text-3xl font-bold tabular-nums text-card-foreground">
             {materia.tieneMedicion ? `${formatoCorto(porcentajeActual)}%` : "Sin registro"}
           </p>
-          <p className="text-xs text-muted-foreground">
-            Rango máximo de lectura: {formatNumber(capacidadMaxima)} {materia.unidad}
-          </p>
           <p className="mt-2 text-sm text-muted-foreground">
             Cantidad estimada de gas:{" "}
             <span className="font-semibold text-card-foreground">
