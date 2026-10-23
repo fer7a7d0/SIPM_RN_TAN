@@ -5,7 +5,7 @@ import { TarjetaMateria, type Materia } from "@/components/tarjeta-materia"
 import { CatalogoTanques } from "@/components/catalogo-tanques"
 import { GraficoHistorico } from "@/components/grafico-historico"
 import { Button } from "@/components/ui/button"
-import { LineChart, Share2 } from "lucide-react"
+import { LineChart, Plus, Share2 } from "lucide-react"
 import { toPng } from "html-to-image"
 import { formatNumber } from "@/lib/format-number"
 import {
@@ -95,6 +95,7 @@ type DashboardSelectorProps = {
 export function DashboardSelector({ resumenTanques, materias, error }: DashboardSelectorProps) {
   const [resumenActual, setResumenActual] = useState(resumenTanques)
   const [materiasActuales, setMateriasActuales] = useState(materias)
+  const [catalogoAbierto, setCatalogoAbierto] = useState(false)
   const [tanqueSeleccionado, setTanqueSeleccionado] = useState<string | null>(null)
   const [graficoSeleccionado, setGraficoSeleccionado] = useState<string | null>(null)
   const [diasHistorial, setDiasHistorial] = useState<15 | 30>(15)
@@ -311,7 +312,7 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
             Nivel actual
           </p>
 
-          {!tanqueSeleccionado && !graficoSeleccionado && (
+          {!catalogoAbierto && !tanqueSeleccionado && !graficoSeleccionado && (
             <section className="mt-5 rounded-xl border border-border bg-background/60 p-3 sm:p-4">
               <div className="mb-3 flex items-center justify-between gap-2">
                 <div>
@@ -323,12 +324,16 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
-                  <CatalogoTanques
-                    tanques={catalogoTanques}
-                    onCrear={agregarTanque}
-                    onActualizar={actualizarTanqueCatalogo}
-                    onEliminar={quitarTanque}
-                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Administrar catálogo de tanques"
+                    title="Catálogo de tanques"
+                    onClick={() => setCatalogoAbierto(true)}
+                  >
+                    <Plus aria-hidden="true" />
+                  </Button>
                   <button
                     onClick={compartirWhatsApp}
                     disabled={isSharing}
@@ -424,6 +429,24 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
           </section>
         )}
 
+        {catalogoAbierto && (
+          <section className="flex flex-col gap-4">
+            <Button
+              onClick={() => setCatalogoAbierto(false)}
+              variant="outline"
+              className="w-fit"
+            >
+              ← Volver al resumen
+            </Button>
+            <CatalogoTanques
+              tanques={catalogoTanques}
+              onCrear={agregarTanque}
+              onActualizar={actualizarTanqueCatalogo}
+              onEliminar={quitarTanque}
+            />
+          </section>
+        )}
+
         {tanqueSeleccionado && materiaSeleccionada && (
           <section className="flex flex-col gap-4">
             <Button
@@ -444,7 +467,7 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
           </section>
         )}
 
-        {!tanqueSeleccionado && !graficoSeleccionado && !error && materiasActuales.length === 0 && (
+        {!catalogoAbierto && !tanqueSeleccionado && !graficoSeleccionado && !error && materiasActuales.length === 0 && (
           <p className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning-foreground">
             No hay tanques registrados. Usa el botón del catálogo para agregar uno.
           </p>

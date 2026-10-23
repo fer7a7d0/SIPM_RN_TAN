@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { actualizarTanque, crearTanque, eliminarTanque, type TanqueCatalogo } from "@/app/actions"
 import { Button } from "@/components/ui/button"
-import { Pencil, Plus, Trash2, X } from "lucide-react"
+import { Pencil, Plus, Trash2 } from "lucide-react"
 import { UNIDADES_CAPACIDAD_GAS, UNIDADES_LECTURA } from "@/lib/unidades-tanques"
 import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { formatNumber } from "@/lib/format-number"
@@ -16,7 +16,6 @@ type CatalogoTanquesProps = {
 }
 
 export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: CatalogoTanquesProps) {
-  const [abierto, setAbierto] = useState(false)
   const [tanqueEditando, setTanqueEditando] = useState<TanqueCatalogo | null>(null)
   const [agregando, setAgregando] = useState(false)
   const [unidad, setUnidad] = useState<string>(UNIDADES_LECTURA[0])
@@ -103,64 +102,29 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
   }
 
   return (
-    <>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        aria-label="Administrar catálogo de tanques"
-        title="Catálogo de tanques"
-        onClick={() => {
-          setError(null)
-          setAbierto(true)
-        }}
-      >
-        <Plus aria-hidden="true" />
-      </Button>
-
-      {abierto && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget && !pendiente) setAbierto(false)
-          }}
-        >
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="catalogo-tanques-titulo"
-            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-xl sm:p-6"
-          >
-            <header className="mb-5 flex items-center justify-between gap-3">
+    <section className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm sm:p-6">
+      <header className="mb-5 flex items-center justify-between gap-3">
               <div>
                 <h2 id="catalogo-tanques-titulo" className="text-xl font-semibold">
                   Catálogo de tanques termo
                 </h2>
               </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label="Cerrar catálogo"
-                disabled={pendiente}
-                onClick={() => setAbierto(false)}
-              >
-                <X aria-hidden="true" />
-              </Button>
-            </header>
+      </header>
 
-            <div className="mb-4 flex justify-end">
-              <Button
-                type="button"
-                size="icon-sm"
-                aria-label="Agregar tanque"
-                title="Agregar tanque"
-                disabled={pendiente || agregando || tanqueEditando !== null}
-                onClick={abrirNuevo}
-              >
-                <Plus aria-hidden="true" />
-              </Button>
-            </div>
+            {!agregando && !tanqueEditando && (
+              <div className="mb-4 flex justify-end">
+                <Button
+                  type="button"
+                  size="icon-sm"
+                  aria-label="Agregar tanque"
+                  title="Agregar tanque"
+                  disabled={pendiente}
+                  onClick={abrirNuevo}
+                >
+                  <Plus aria-hidden="true" />
+                </Button>
+              </div>
+            )}
 
             {(agregando || tanqueEditando) && (
               <form onSubmit={guardarTanque} className="mb-5 grid gap-3 rounded-xl border border-border bg-background/60 p-4 sm:grid-cols-2">
@@ -251,13 +215,13 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
               </form>
             )}
 
-            {error && !agregando && !tanqueEditando && (
+            {!agregando && !tanqueEditando && error && (
               <p role="alert" className="mb-4 text-sm text-destructive">
                 {error}
               </p>
             )}
 
-            {tanques.length > 0 ? (
+      {!agregando && !tanqueEditando && (tanques.length > 0 ? (
               <ul className="flex flex-col gap-2">
                 {tanques.map((tanque) => (
                   <li
@@ -304,10 +268,7 @@ export function CatalogoTanques({ tanques, onCrear, onActualizar, onEliminar }: 
               <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
                 No hay tanques registrados.
               </p>
-            )}
-          </section>
-        </div>
-      )}
-    </>
+            ))}
+    </section>
   )
 }
