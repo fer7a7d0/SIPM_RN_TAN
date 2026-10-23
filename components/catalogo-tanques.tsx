@@ -147,6 +147,8 @@ export function CatalogoTanques({
   function selectorUnidad(tipo: TipoUnidadTanque, label: string, valor: string, opciones: string[]) {
     const idUnidad = `unidad-${tipo}`
     const idNuevaUnidad = `nueva-unidad-${tipo}`
+    const opcionesOrdenadas = [...new Set([...opciones, ...(valor && !opciones.includes(valor) ? [valor] : [])])]
+      .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }))
     return (
       <div className="flex flex-col gap-1 text-sm">
         <label htmlFor={idUnidad} className="font-medium">{label}</label>
@@ -158,10 +160,9 @@ export function CatalogoTanques({
           disabled={pendiente}
           className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
         >
-          {valor && !opciones.includes(valor) && <option value={valor}>Actual: {valor}</option>}
-          {opciones.map((opcion) => (
+          {opcionesOrdenadas.map((opcion) => (
             <option key={opcion} value={opcion}>
-              {opcion}
+              {!opciones.includes(opcion) ? `Actual: ${opcion}` : opcion}
             </option>
           ))}
           <option value="__agregar_unidad__">+ Agregar unidad…</option>
