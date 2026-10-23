@@ -326,13 +326,12 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
                 <div className="flex items-center gap-1">
                   <Button
                     type="button"
-                    variant="ghost"
-                    size="icon"
                     aria-label="Administrar catálogo de tanques"
                     title="Catálogo de tanques"
                     onClick={() => setCatalogoAbierto(true)}
+                    className="flex size-8 items-center justify-center rounded-md bg-muted text-muted-foreground transition-all hover:bg-muted/80 disabled:opacity-60"
                   >
-                    <Plus aria-hidden="true" />
+                    <Plus aria-hidden="true" className="h-3.5 w-3.5" />
                   </Button>
                   <button
                     onClick={compartirWhatsApp}
