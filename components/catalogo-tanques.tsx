@@ -12,7 +12,7 @@ import {
 } from "@/app/actions"
 import { Button } from "@/components/ui/button"
 import { Pencil, Plus, RotateCcw, Trash2 } from "lucide-react"
-import { UNIDADES_CAPACIDAD_GAS, UNIDADES_LECTURA, type TipoUnidadTanque } from "@/lib/unidades-tanques"
+import { type TipoUnidadTanque } from "@/lib/unidades-tanques"
 import { FormattedNumberInput } from "@/components/ui/formatted-number-input"
 import { formatNumber } from "@/lib/format-number"
 
@@ -35,10 +35,10 @@ export function CatalogoTanques({
 }: CatalogoTanquesProps) {
   const [tanqueEditando, setTanqueEditando] = useState<TanqueCatalogo | null>(null)
   const [agregando, setAgregando] = useState(false)
-  const [unidad, setUnidad] = useState<string>(UNIDADES_LECTURA[0])
-  const [unidadCapacidadGas, setUnidadCapacidadGas] = useState<string>(UNIDADES_CAPACIDAD_GAS[1])
-  const [unidadesLectura, setUnidadesLectura] = useState<string[]>([...UNIDADES_LECTURA])
-  const [unidadesCapacidadGas, setUnidadesCapacidadGas] = useState<string[]>([...UNIDADES_CAPACIDAD_GAS])
+  const [unidad, setUnidad] = useState<string>("")
+  const [unidadCapacidadGas, setUnidadCapacidadGas] = useState<string>("")
+  const [unidadesLectura, setUnidadesLectura] = useState<string[]>([])
+  const [unidadesCapacidadGas, setUnidadesCapacidadGas] = useState<string[]>([])
   const [agregandoUnidad, setAgregandoUnidad] = useState<TipoUnidadTanque | null>(null)
   const [nuevaUnidad, setNuevaUnidad] = useState("")
   const [pendiente, setPendiente] = useState(false)
@@ -55,18 +55,10 @@ export function CatalogoTanques({
         return
       }
 
-      setUnidadesLectura((actuales) => [
-        ...new Set([
-          ...actuales,
-          ...resultado.unidades.filter((item) => item.tipo === "lectura").map((item) => item.nombre),
-        ]),
-      ])
-      setUnidadesCapacidadGas((actuales) => [
-        ...new Set([
-          ...actuales,
-          ...resultado.unidades.filter((item) => item.tipo === "capacidad_gas").map((item) => item.nombre),
-        ]),
-      ])
+      setUnidadesLectura(resultado.unidades.filter((item) => item.tipo === "lectura").map((item) => item.nombre))
+      setUnidadesCapacidadGas(
+        resultado.unidades.filter((item) => item.tipo === "capacidad_gas").map((item) => item.nombre),
+      )
     }
 
     void cargarUnidades().catch((loadError) => {
@@ -80,8 +72,8 @@ export function CatalogoTanques({
 
   function abrirNuevo() {
     setTanqueEditando(null)
-    setUnidad(UNIDADES_LECTURA[0])
-    setUnidadCapacidadGas(UNIDADES_CAPACIDAD_GAS[1])
+    setUnidad("")
+    setUnidadCapacidadGas("")
     setAgregandoUnidad(null)
     setNuevaUnidad("")
     setError(null)
@@ -91,7 +83,7 @@ export function CatalogoTanques({
   function abrirEdicion(tanque: TanqueCatalogo) {
     setTanqueEditando(tanque)
     setUnidad(tanque.unidad)
-    setUnidadCapacidadGas(tanque.unidad_capacidad_gas ?? UNIDADES_CAPACIDAD_GAS[1])
+    setUnidadCapacidadGas(tanque.unidad_capacidad_gas ?? "")
     setAgregandoUnidad(null)
     setNuevaUnidad("")
     setError(null)
@@ -147,8 +139,9 @@ export function CatalogoTanques({
   function selectorUnidad(tipo: TipoUnidadTanque, label: string, valor: string, opciones: string[]) {
     const idUnidad = `unidad-${tipo}`
     const idNuevaUnidad = `nueva-unidad-${tipo}`
-    const opcionesOrdenadas = [...new Set([...opciones, ...(valor && !opciones.includes(valor) ? [valor] : [])])]
-      .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }))
+    const opcionesOrdenadas = [...new Set(opciones)].sort((a, b) =>
+      a.localeCompare(b, "es", { sensitivity: "base" }),
+    )
     return (
       <div className="flex flex-col gap-1 text-sm">
         <label htmlFor={idUnidad} className="font-medium">{label}</label>
@@ -160,9 +153,10 @@ export function CatalogoTanques({
           disabled={pendiente}
           className="rounded-md border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
         >
+          <option value="">Selecciona una unidad</option>
           {opcionesOrdenadas.map((opcion) => (
             <option key={opcion} value={opcion}>
-              {!opciones.includes(opcion) ? `Actual: ${opcion}` : opcion}
+              {opcion}
             </option>
           ))}
           <option value="__agregar_unidad__">+ Agregar unidad…</option>
