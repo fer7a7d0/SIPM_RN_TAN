@@ -378,7 +378,7 @@ export function CatalogoTanques({
                         Rango de lectura: 0 - {formatNumber(tanque.capacidad_maxima)} {tanque.unidad}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Capacidad máxima de gas:{" "}
+                        Capacidad máxima:{" "}
                         {tanque.capacidad_gas === null ? "Sin especificar" : formatNumber(tanque.capacidad_gas)}{" "}
                         {tanque.unidad_capacidad_gas ?? ""}
                       </p>
