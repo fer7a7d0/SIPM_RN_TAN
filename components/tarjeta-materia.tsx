@@ -130,7 +130,7 @@ export function TarjetaMateria({
             {materia.tieneMedicion ? `${formatoCorto(porcentajeActual)}%` : "Sin registro"}
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Cantidad estimada de gas:{" "}
+            Cantidad estimada:{" "}
             <span className="font-semibold text-card-foreground">
               {!materia.tieneMedicion
                 ? "Sin registro"
