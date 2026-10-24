@@ -353,7 +353,7 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-3 py-10 sm:px-6 md:py-12">
         <header ref={headerRef} className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6">
           <p className="text-xs font-semibold tracking-[0.24em] text-primary uppercase">MONITOREO DE TANQUES TERMO</p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-card-foreground text-balance">
+          <h1 className="mt-2 text-2xl font-bold tracking-tight text-card-foreground text-balance sm:text-3xl">
             Registro de mediciones
           </h1>
           <p className="mt-2 max-w-3xl text-muted-foreground text-pretty">
