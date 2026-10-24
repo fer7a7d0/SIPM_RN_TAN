@@ -139,6 +139,14 @@ export function TarjetaMateria({
                   : `${formatNumber(cantidadGasCalculada)} ${materia.unidadCapacidadGas}`}
             </span>
           </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Capacidad total:{" "}
+            <span className="font-semibold text-card-foreground">
+              {materia.capacidadGas === null || !materia.unidadCapacidadGas
+                ? "Sin especificar"
+                : `${formatNumber(materia.capacidadGas)} ${materia.unidadCapacidadGas}`}
+            </span>
+          </p>
         </div>
 
         <div className="relative h-44 w-20 overflow-hidden rounded-t-[1.6rem] rounded-b-lg border-2 border-border bg-muted/80 p-1">
