@@ -24,6 +24,12 @@ type GraficoHistoricoProps = {
   errorEliminar: string | null
 }
 
+function notaSinUnidadLecturaReal(nota: string | undefined, unidad: string) {
+  const sufijoUnidad = ` ${unidad}`
+  if (!nota?.includes("Lectura real:") || !nota.endsWith(sufijoUnidad)) return nota
+  return nota.slice(0, -sufijoUnidad.length)
+}
+
 export function GraficoHistorico({
   materia,
   datos,
@@ -161,6 +167,7 @@ export function GraficoHistorico({
             {datos.length > 0 ? (
               datos.map((dato, index) => {
                 const lecturaPrevia = datos[index + 1]
+                const nota = notaSinUnidadLecturaReal(dato.nota, materia.unidad)
                 const variacionGas =
                   lecturaPrevia &&
                   materia.capacidadGas !== null &&
@@ -175,7 +182,7 @@ export function GraficoHistorico({
                   <div key={dato.id} className="flex items-center justify-between gap-4 rounded-lg bg-background/60 p-3">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-card-foreground">{dato.fecha}</p>
-                      {dato.nota && <p className="text-xs text-muted-foreground">{dato.nota}</p>}
+                      {nota && <p className="text-xs text-muted-foreground">{nota}</p>}
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold text-card-foreground">{formatNumber(dato.porcentaje)}%</p>
