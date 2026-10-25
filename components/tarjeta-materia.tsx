@@ -140,7 +140,7 @@ export function TarjetaMateria({
             </span>
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Capacidad total:{" "}
+            Capacidad:{" "}
             <span className="font-semibold text-card-foreground">
               {materia.capacidadGas === null || !materia.unidadCapacidadGas
                 ? "Sin especificar"
