@@ -4,8 +4,8 @@ import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
+  title: 'Tanques Termo',
+  description: 'Registro de niveles de tanques termo',
   generator: 'v0.app',
   icons: {
     icon: [
