@@ -177,6 +177,12 @@ export function GraficoHistorico({
                         (materia.capacidadGas * (dato.porcentaje - lecturaPrevia.porcentaje)) / 100,
                       )
                     : null
+                const cantidadGasEstimada =
+                  materia.capacidadGas !== null &&
+                  Number.isFinite(materia.capacidadGas) &&
+                  materia.capacidadGas > 0
+                    ? Math.round((materia.capacidadGas * dato.porcentaje) / 100)
+                    : null
 
                 return (
                   <div key={dato.id} className="flex items-center justify-between gap-4 rounded-lg bg-background/60 p-3">
@@ -186,6 +192,13 @@ export function GraficoHistorico({
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold text-card-foreground">{formatNumber(dato.porcentaje)}%</p>
+                      <p className="text-xs text-muted-foreground">
+                        <span className="font-semibold text-card-foreground">
+                          {cantidadGasEstimada === null || !materia.unidadCapacidadGas
+                            ? "Capacidad sin especificar"
+                            : `${formatNumber(cantidadGasEstimada)} ${materia.unidadCapacidadGas}`}
+                        </span>
+                      </p>
                       {variacionGas !== null && (
                         <p className="flex items-center justify-end gap-1 text-xs font-semibold text-muted-foreground">
                           {variacionGas !== 0 && (
