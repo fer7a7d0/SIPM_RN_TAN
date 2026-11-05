@@ -199,16 +199,14 @@ export function GraficoHistorico({
                             : `${formatNumber(cantidadGasEstimada)} ${materia.unidadCapacidadGas}`}
                         </span>
                       </p>
-                      {variacionGas !== null && (
+                      {variacionGas !== null && variacionGas !== 0 && (
                         <p className="flex items-center justify-end gap-1 text-xs font-semibold text-muted-foreground">
-                          {variacionGas !== 0 && (
-                            <span
-                              aria-label={variacionGas > 0 ? "Aumento" : "Disminución"}
-                              className={variacionGas > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}
-                            >
-                              {variacionGas > 0 ? "↑" : "↓"}
-                            </span>
-                          )}
+                          <span
+                            aria-label={variacionGas > 0 ? "Aumento" : "Disminución"}
+                            className={variacionGas > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}
+                          >
+                            {variacionGas > 0 ? "↑" : "↓"}
+                          </span>
                           {variacionGas > 0 ? "+" : ""}
                           {formatNumber(variacionGas)} {materia.unidadCapacidadGas}
                         </p>
