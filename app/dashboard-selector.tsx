@@ -434,7 +434,7 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
                           className={`h-full rounded-full transition-all duration-500 ${tanque.estado.colorBarra}`}
                           style={{
                             width: `${tanque.tieneMedicion ? tanque.porcentaje : 0}%`,
-                            animationDelay: `${index * 450}ms`,
+                            animationDelay: `${index * 400}ms`,
                           }}
                           data-animate-summary-bar
                         />
