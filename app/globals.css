@@ -142,7 +142,7 @@
 
 [data-animate-summary-bar] {
   transform-origin: left;
-  animation: summary-bar-fill 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: summary-bar-fill 1800ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes summary-bar-fill {
