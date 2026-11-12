@@ -393,7 +393,7 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
                 </div>
               </div>
               <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                {resumenActual.map((tanque) => (
+                {resumenActual.map((tanque, index) => (
                   <li key={tanque.id} className="rounded-lg border border-border bg-card">
                     <button
                       onClick={() => setTanqueSeleccionado(tanque.nombre)}
@@ -432,7 +432,11 @@ export function DashboardSelector({ resumenTanques, materias, error }: Dashboard
                       <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
                         <div
                           className={`h-full rounded-full transition-all duration-500 ${tanque.estado.colorBarra}`}
-                          style={{ width: `${tanque.tieneMedicion ? tanque.porcentaje : 0}%` }}
+                          style={{
+                            width: `${tanque.tieneMedicion ? tanque.porcentaje : 0}%`,
+                            animationDelay: `${index * 450}ms`,
+                          }}
+                          data-animate-summary-bar
                         />
                       </div>
                     </button>
